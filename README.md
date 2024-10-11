@@ -1,9 +1,15 @@
-# PFL Projects 
+# PFL-Hub
 
-Developed by:
-- Alexandre Ramos - up202208028
-- Francisco Afonso - up202208115
+Welcome to the **PFL-Hub**, a repository containing our projects for the **Functional and Logic Programming (Programação Funcional e em Lógica)** course. Here, you'll find implementations and experiments focusing on declarative approaches to programming, based on formal reasoning processes, which are more appropriate for resolving some types of problems.
 
-[**Project 1**](Project%201/TP1.hs)
+## Projects
 
-[**Project 2**](Project%201/TP2.hs)
+### 1. **Project 1: [RoadMap]**
+   - **Description**: The goals of this project are to define and use appropriate data types for a
+graph representing a country, composed of a set of interconnected cities.
+
+ ## Developed by:
+- **Alexandre Ramos** up202208028
+- **Francisco Afonso** up202208115
+
+
