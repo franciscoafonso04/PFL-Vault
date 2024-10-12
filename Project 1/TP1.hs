@@ -25,10 +25,11 @@ distance :: RoadMap -> City -> City -> Maybe Distance
 distance = undefined
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
-adjacent roadmap city = [(dest, dist)| (src, dest, dist) <- roadmap, city == src] ++ [(src, dist)| (src, dest, dist) <- roadmap, city == dest] -- é 2n
+--adjacent roadmap city = [(dest, dist)| (src, dest, dist) <- roadmap, city == src] ++ [(src, dist)| (src, dest, dist) <- roadmap, city == dest] -- é O(2n)
 
---adjacent roadmap city = [if city == src then (dest, dist) else if city == dest then (src, dist) | (src, dest, dist) <- roadmap] -- tentativa de fazer n
-
+adjacent roadmap city = [if city == src then (dest, dist) 
+                         else (src, dist) 
+                         | (src, dest, dist) <- roadmap, city == src || city == dest] -- não está tão clean, mas é O(n)
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance = undefined
