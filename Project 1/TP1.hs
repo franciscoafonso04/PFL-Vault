@@ -16,13 +16,15 @@ cities :: RoadMap -> [City]
 cities roadmap = Data.List.nub [pair | (city1, city2, _) <- roadmap, pair <- [city1, city2]]
 
 areAdjacent :: RoadMap -> City -> City -> Bool
-areAdjacent roadmap city1 city2 = or [(city1, city2) == (src, dest) || (city1, city2) == (dest, src) | (src, dest, _) <- roadmap] -- não sei se este método corre a lista toda ou termina quando encontra um True...
+areAdjacent roadmap city1 city2 = or [(city1, city2) == (src, dest) || (city1, city2) == (dest, src) | (src, dest, _) <- roadmap]
 
--- areAdjacent roadmap city1 city2 = any id [(city1, city2) == (src, dest) || (city1, city2) == (dest, src) | (src, dest, _) <- roadmap] -- alternativa que talvez faça isso
--- areAdjacent roadmap city1 city2 = any (\(src, dest, _) -> (city1, city2) == (src, dest) || (city1, city2) == (dest, src)) roadmap -- alternativa que talvez faça isso
+distance :: [(City, City, Distance)] -> City -> City -> Maybe Distance
+distance roadmap city1 city2 = 
+    let result = [dist | (src, dest, dist) <- roadmap, (city1, city2) == (src, dest) || (city1, city2) == (dest, src)]
+    in if null result then Nothing
+       else Just (head result) 
+-- corre a lista toda o que não é muito eficiente, para além disso teve de ser o gpt a fazer as duas últimas linhas, não percebi o porque desta sintaxe esquisita 
 
-distance :: RoadMap -> City -> City -> Maybe Distance
-distance = undefined
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
 --adjacent roadmap city = [(dest, dist)| (src, dest, dist) <- roadmap, city == src] ++ [(src, dist)| (src, dest, dist) <- roadmap, city == dest] -- é O(2n)
