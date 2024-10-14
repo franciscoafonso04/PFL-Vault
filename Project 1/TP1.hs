@@ -20,11 +20,9 @@ areAdjacent roadmap city1 city2 = or [(city1, city2) == (src, dest) || (city1, c
 
 distance :: [(City, City, Distance)] -> City -> City -> Maybe Distance
 distance roadmap city1 city2 = 
-    let result = [dist | (src, dest, dist) <- roadmap, (city1, city2) == (src, dest) || (city1, city2) == (dest, src)]
-    in if null result then Nothing
-       else Just (head result) 
--- corre a lista toda o que não é muito eficiente, para além disso teve de ser o gpt a fazer as duas últimas linhas, não percebi o porque desta sintaxe esquisita 
-
+        case Data.List.find (\(src, dest, _) -> (city1 == src && city2 == dest) || (city1 == dest && city2 == src)) roadmap of
+        Nothing -> Nothing
+        Just (_, _, dist) -> Just dist
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
 --adjacent roadmap city = [(dest, dist)| (src, dest, dist) <- roadmap, city == src] ++ [(src, dist)| (src, dest, dist) <- roadmap, city == dest] -- é O(2n)
@@ -34,7 +32,14 @@ adjacent roadmap city = [if city == src then (dest, dist)
                          | (src, dest, dist) <- roadmap, city == src || city == dest] -- não está tão clean, mas é O(n)
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
-pathDistance = undefined
+pathDistance _ [] = Just 0
+pathDistance _ [_] = Just 0
+pathDistance roadmap (city1:city2:path) = 
+    case distance roadmap city1 city2 of
+    Nothing -> Nothing
+    Just dist -> case pathDistance roadmap (city2:path) of
+        Nothing -> Nothing
+        Just dist_rest -> Just(dist + dist_rest)
 
 rome :: RoadMap -> [City]
 rome = undefined
