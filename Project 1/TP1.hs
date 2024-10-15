@@ -16,11 +16,11 @@ cities :: RoadMap -> [City]
 cities roadmap = Data.List.nub [pair | (city1, city2, _) <- roadmap, pair <- [city1, city2]]
 
 areAdjacent :: RoadMap -> City -> City -> Bool
-areAdjacent roadmap city1 city2 = or [(city1, city2) == (src, dest) || (city1, city2) == (dest, src) | (src, dest, _) <- roadmap]
+areAdjacent roadmap city1 city2 = or [(src, dest) == (city1, city2) || (src, dest) == (city2, city1) | (src, dest, _) <- roadmap]
 
 distance :: [(City, City, Distance)] -> City -> City -> Maybe Distance
 distance roadmap city1 city2 = 
-        case Data.List.find (\(src, dest, _) -> (city1 == src && city2 == dest) || (city1 == dest && city2 == src)) roadmap of
+        case Data.List.find (\(src, dest, _) -> (src == city1 && dest == city2) || (src == city2 && dest == city1)) roadmap of
         Nothing -> Nothing
         Just (_, _, dist) -> Just dist
 
@@ -45,7 +45,7 @@ pathDistance roadmap (city1:city2:path) =
         Nothing -> Nothing
         Just dist_rest -> Just(dist + dist_rest)
 
-rome :: RoadMap -> [City]
+rome :: RoadMap -> [City] -- estava a pensar correr a função cities criar tipo [(City, Int)] e depois voltar a correr e adicionar o counter cada vez que encontramos a cidade, no final damos print das cidades com o maior counter
 rome = undefined
 
 isStronglyConnected :: RoadMap -> Bool
