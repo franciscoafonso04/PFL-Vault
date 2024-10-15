@@ -31,6 +31,10 @@ adjacent roadmap city = [if city == src then (dest, dist)
                          else (src, dist) 
                          | (src, dest, dist) <- roadmap, city == src || city == dest] -- não está tão clean, mas é O(n)
 
+adjacent roadmap city = 
+    map (\(src, dest, dist) -> if city == src then (dest, dist) else (src, dist))
+    (filter (\(src, dest, _) -> city == src || city == dest) roadmap)
+
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance _ [] = Just 0
 pathDistance _ [_] = Just 0
