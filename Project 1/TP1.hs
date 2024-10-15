@@ -41,7 +41,7 @@ pathDistance roadmap (city1:city2:path) =
         Nothing -> Nothing
         Just dist_rest -> Just(dist + dist_rest)
 
-rome :: RoadMap -> [City] -- estava a pensar correr a lista cities criar tipo [(City, Int)] e depois voltar a correr e adicionar o counter cada vez que encontramos a cidade, no final damos print das cidades com o maior counter
+rome :: RoadMap -> [City] -- estava a pensar correr a função cities criar tipo [(City, Int)] e depois voltar a correr e adicionar o counter cada vez que encontramos a cidade, no final damos print das cidades com o maior counter
 rome = undefined
 
 isStronglyConnected :: RoadMap -> Bool
