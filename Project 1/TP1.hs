@@ -31,9 +31,9 @@ adjacent roadmap city = [if city == src then (dest, dist)
                          else (src, dist) 
                          | (src, dest, dist) <- roadmap, city == src || city == dest] -- não está tão clean, mas é O(n)
 
-adjacent roadmap city = 
-    map (\(src, dest, dist) -> if city == src then (dest, dist) else (src, dist))
-    (filter (\(src, dest, _) -> city == src || city == dest) roadmap)
+ -- adjacent roadmap city = 
+  --  map (\(src, dest, dist) -> if city == src then (dest, dist) else (src, dist))
+ --   (filter (\(src, dest, _) -> city == src || city == dest) roadmap)
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance _ [] = Just 0
@@ -46,7 +46,17 @@ pathDistance roadmap (city1:city2:path) =
         Just dist_rest -> Just(dist + dist_rest)
 
 rome :: RoadMap -> [City] -- estava a pensar correr a função cities criar tipo [(City, Int)] e depois voltar a correr e adicionar o counter cada vez que encontramos a cidade, no final damos print das cidades com o maior counter
-rome = undefined
+rome roadmap = 
+    let tupleList = romeAux roadmap
+        maxVal = maximum [b | (a,b) <- tupleList]
+    in [city | (city, n) <- tupleList , n == maxVal]
+
+romeAux :: RoadMap -> [(City, Int)]
+romeAux roadmap = 
+    let uniqueCities = cities roadmap
+        allCities = [pair | (city1, city2, _) <- roadmap, pair <- [city1, city2]]
+    in[(city, length [c | c <- allCities , c == city]) | city <- uniqueCities]
+
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
