@@ -9,11 +9,30 @@ import qualified Data.List
 type City = String
 type Path = [City]
 type Distance = Int
-
 type RoadMap = [(City,City,Distance)]
 
+------------------------------------------------------------------------------------------------------------------------------  
+
+-- Extracts unique cities from a RoadMap, a list of (city1, city2, distance) tuples, representing roads between cities.
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road with two cities and a distance.
+--
+-- Returns: A list of cities appearing in the roadmap, with duplicates removed by using Data.List.nub.
+
 cities :: RoadMap -> [City]
-cities roadmap = Data.List.nub [pair | (city1, city2, _) <- roadmap, pair <- [city1, city2]]
+cities roadmap = Data.List.nub [city | (city1, city2, _) <- roadmap, city <- [city1, city2]]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Returns a boolean indicating whether two cities are linked directly.
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road with two cities and a distance.
+--   city1 - First city of the two given.
+--   city2 - Second city of the two given.
+--
+-- Returns: 
 
 areAdjacent :: RoadMap -> City -> City -> Bool
 areAdjacent roadmap city1 city2 = or [(src, dest) == (city1, city2) || (src, dest) == (city2, city1) | (src, dest, _) <- roadmap]
@@ -25,27 +44,17 @@ distance roadmap city1 city2 =
         Just (_, _, dist) -> Just dist
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
---adjacent roadmap city = [(dest, dist)| (src, dest, dist) <- roadmap, city == src] ++ [(src, dist)| (src, dest, dist) <- roadmap, city == dest] -- é O(2n)
-
-adjacent roadmap city = [if city == src then (dest, dist) 
-                         else (src, dist) 
-                         | (src, dest, dist) <- roadmap, city == src || city == dest] -- não está tão clean, mas é O(n)
-
- -- adjacent roadmap city = 
-  --  map (\(src, dest, dist) -> if city == src then (dest, dist) else (src, dist))
- --   (filter (\(src, dest, _) -> city == src || city == dest) roadmap)
+adjacent roadmap city = [(dest, dist)| (src, dest, dist) <- roadmap, city == src] ++ [(src, dist)| (src, dest, dist) <- roadmap, city == dest]
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance _ [] = Just 0
 pathDistance _ [_] = Just 0
 pathDistance roadmap (city1:city2:path) = 
-    case distance roadmap city1 city2 of
-    Nothing -> Nothing
-    Just dist -> case pathDistance roadmap (city2:path) of
-        Nothing -> Nothing
-        Just dist_rest -> Just(dist + dist_rest)
+    do dist <- distance roadmap city1 city2
+       dist_rest <- pathDistance roadmap (city2:path)
+       return (dist + dist_rest)
 
-rome :: RoadMap -> [City] -- estava a pensar correr a função cities criar tipo [(City, Int)] e depois voltar a correr e adicionar o counter cada vez que encontramos a cidade, no final damos print das cidades com o maior counter
+rome :: RoadMap -> [City]
 rome roadmap = 
     let tupleList = romeAux roadmap
         maxVal = maximum [b | (a,b) <- tupleList]
@@ -55,8 +64,7 @@ romeAux :: RoadMap -> [(City, Int)]
 romeAux roadmap = 
     let uniqueCities = cities roadmap
         allCities = [pair | (city1, city2, _) <- roadmap, pair <- [city1, city2]]
-    in[(city, length [c | c <- allCities , c == city]) | city <- uniqueCities]
-
+    in [(city, length [c | c <- allCities , c == city]) | city <- uniqueCities]
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
@@ -79,3 +87,5 @@ gTest2 = [("0","1",10),("0","2",15),("0","3",20),("1","2",35),("1","3",25),("2",
 
 gTest3 :: RoadMap -- unconnected graph
 gTest3 = [("0","1",4),("2","3",2)]
+
+gTest4 = concat (replicate 10000 gTest1) -- bigass graph
