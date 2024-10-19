@@ -4,7 +4,7 @@ import qualified Data.List
 
 -- PFL 2024/2025 Practical assignment 1
 
--- Uncomment the some/all of the first three lines to import the modules, do not change the code of these lines.
+------------------------------------------------------------------------------------------------------------------------------
 
 type City = String
 type Path = [City]
@@ -32,19 +32,54 @@ cities roadmap = Data.List.nub [city | (city1, city2, _) <- roadmap, city <- [ci
 --   city1 - First city of the two given.
 --   city2 - Second city of the two given.
 --
--- Returns: 
+-- Returns: If city1 and city2 are linked by a road (city1, city2, distance) or (city2, city, distance).
 
 areAdjacent :: RoadMap -> City -> City -> Bool
 areAdjacent roadmap city1 city2 = or [(src, dest) == (city1, city2) || (src, dest) == (city2, city1) | (src, dest, _) <- roadmap]
 
-distance :: [(City, City, Distance)] -> City -> City -> Maybe Distance
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Returns the distance between two cities if connected directly, otherwise returns Nothing.
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road with two cities and a distance.
+--   city1 - First city of the two given.
+--   city2 - Second city of the two given.
+--
+-- Returns: The distance between city1 and city2 by using Data.List.find alongside with a lambda function 
+--          that finds roads of the type (city1, city2, d) or (city2, city1, d) and Nothing if a road does not exist.
+
+distance :: RoadMap -> City -> City -> Maybe Distance
 distance roadmap city1 city2 = 
         case Data.List.find (\(src, dest, _) -> (src == city1 && dest == city2) || (src == city2 && dest == city1)) roadmap of
         Nothing -> Nothing
         Just (_, _, dist) -> Just dist
 
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Returns the cities adjacent to a particular city and the respective distances between them.
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road with two cities and a distance.
+--   city - A particular city given.
+--
+-- Returns: The concatenation of two lists, one with the roads (city, otherCity, distance) 
+--          and another with the roads (otherCity, city, distance).
+
 adjacent :: RoadMap -> City -> [(City,Distance)]
 adjacent roadmap city = [(dest, dist)| (src, dest, dist) <- roadmap, city == src] ++ [(src, dist)| (src, dest, dist) <- roadmap, city == dest]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Returns the sum of all individual distances in a path between two cities, if the consecutive pairs of cities
+-- are connected by roads, and Nothing otherwise.
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road with two cities and a distance.
+--   city - A list of cities representing the path to be traveled.
+--
+-- Returns: The sum of all road distances between the cities in the path using recursion 
+--          and Nothing if any pair of consecutive cities in the path is not directly connected by a road.
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance _ [] = Just 0
@@ -54,11 +89,15 @@ pathDistance roadmap (city1:city2:path) =
        dist_rest <- pathDistance roadmap (city2:path)
        return (dist + dist_rest)
 
-rome :: RoadMap -> [City]
-rome roadmap = 
-    let tupleList = romeAux roadmap
-        maxVal = maximum [b | (a,b) <- tupleList]
-    in [city | (city, n) <- tupleList , n == maxVal]
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Helper Function that returns a list of unique cities along with their respective counts of direct connections (roads).
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road connecting two cities and its distance.
+--
+-- Returns: A list of tuples, where each tuple consists of a city and the number of direct connections to it by creating a 
+--          a list of pairs of cities connected by direct roads and another with the unique Cities using the cities function. 
 
 romeAux :: RoadMap -> [(City, Int)]
 romeAux roadmap = 
@@ -66,28 +105,73 @@ romeAux roadmap =
         allCities = [pair | (city1, city2, _) <- roadmap, pair <- [city1, city2]]
     in [(city, length [c | c <- allCities , c == city]) | city <- uniqueCities]
 
-isStronglyConnected :: RoadMap -> Bool
-isStronglyConnected roadmap = 
-    let adjList  = directlyConnected roadmap
-        nCities = length adjList
-        stronglyConnected = [length (dfs source adjList) == nCities | (source, _) <- adjList ]
-    in and stronglyConnected
+------------------------------------------------------------------------------------------------------------------------------
 
-directlyConnected :: RoadMap -> [(City, [City])]
-directlyConnected roadmap = [ (city1, [cities | (cities,_) <- adjacent roadmap city1 ]) | city1 <- cities roadmap]
+-- Returns the names of the cities with the highest number of roads connecting to them (vertices with the highest degree).
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road connecting two cities and its distance.
+--
+-- Returns: A list of cities that have the maximum number of direct connections (roads) in the given roadmap.
+--          If multiple cities have the same highest number of connections, all those cities are returned.
 
-dfs :: City -> [(City, [City])] -> [City]
-dfs src paths = dfsVisit src paths []
+rome :: RoadMap -> [City]
+rome roadmap = 
+    let tupleList = romeAux roadmap
+        maxVal = maximum [b | (a,b) <- tupleList]
+    in [city | (city, n) <- tupleList , n == maxVal]
 
-dfsVisit :: City -> [(City, [City])] -> [City] -> [City]
-dfsVisit city paths visited 
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Helper Function that returns a list of cities and their respective directly connected neighboring cities.
+--
+-- Parameters:
+--   roadmap - A list of tuples, where each tuple represents a road connecting two cities and its distance.
+--
+-- Returns: A list of tuples, where each tuple contains a city and a list of cities directly connected to it.
+--          providing an adjacency list representation of the roadmap.  
+
+getAdjacencyList :: RoadMap -> [(City, [City])]
+getAdjacencyList roadmap = [ (city1, [cities | (cities,_) <- adjacent roadmap city1 ]) | city1 <- cities roadmap]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Helper Function that performs a depth-first search (DFS) starting from a given city to explore all reachable cities.
+--
+-- Parameters:
+--   city - The current city being explored in the DFS.
+--   paths - A list of tuples representing the adjacency list of cities and their directly connected neighbors.
+--   visited - A list of cities that have already been visited in the DFS.
+--
+-- Returns: A list of all cities visited during the DFS, including the current city and its neighbors by using a fold left
+--          and acc that accumulates the visited cities as the DFS proceeds through each neighbor.
+
+dfs :: City -> [(City, [City])] -> [City] -> [City]
+dfs city paths visited 
     | city `elem` visited = visited
-    | otherwise = foldl (\acc neighbor -> dfsVisit neighbor paths acc) (city : visited) neighbors
+    | otherwise = foldl (\acc neighbor -> dfs neighbor paths acc) (city : visited) neighbors
         where
             neighbors = case Data.List.find (\(c,_) -> c == city) paths of
                 Just (_, connectedCities) -> connectedCities
                 Nothing -> []
 
+------------------------------------------------------------------------------------------------------------------------------ 
+
+-- Checks if a roadmap of cities is strongly connected, meaning there is a path between every pair of cities.
+--
+-- Parameters:
+--   roadmap - A list of tuples representing the roads between cities and their distances.
+--
+-- Returns: True if the graph is strongly connected, False otherwise with the help of the dfs and getAdjacencyList functions.
+
+isStronglyConnected :: RoadMap -> Bool
+isStronglyConnected roadmap = 
+    let adjList  = getAdjacencyList roadmap
+        nCities = length adjList
+        stronglyConnected = [length (dfs source adjList []) == nCities | (source, _) <- adjList ]
+    in and stronglyConnected
+
+------------------------------------------------------------------------------------------------------------------------------
 
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath = undefined
