@@ -67,7 +67,27 @@ romeAux roadmap =
     in [(city, length [c | c <- allCities , c == city]) | city <- uniqueCities]
 
 isStronglyConnected :: RoadMap -> Bool
-isStronglyConnected = undefined
+isStronglyConnected roadmap = 
+    let adjList  = directlyConnected roadmap
+        nCities = length adjList
+        stronglyConnected = [length (dfs source adjList) == nCities | (source, _) <- adjList ]
+    in and stronglyConnected
+
+directlyConnected :: RoadMap -> [(City, [City])]
+directlyConnected roadmap = [ (city1, [cities | (cities,_) <- adjacent roadmap city1 ]) | city1 <- cities roadmap]
+
+dfs :: City -> [(City, [City])] -> [City]
+dfs src paths = dfsVisit src paths []
+
+dfsVisit :: City -> [(City, [City])] -> [City] -> [City]
+dfsVisit city paths visited 
+    | city `elem` visited = visited
+    | otherwise = foldl (\acc neighbor -> dfsVisit neighbor paths acc) (city : visited) neighbors
+        where
+            neighbors = case Data.List.find (\(c,_) -> c == city) paths of
+                Just (_, connectedCities) -> connectedCities
+                Nothing -> []
+
 
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath = undefined
