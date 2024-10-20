@@ -132,7 +132,7 @@ rome roadmap =
 --          providing an adjacency list representation of the roadmap.  
 
 getAdjacencyList :: RoadMap -> [(City, [City])]
-getAdjacencyList roadmap = [ (city1, [cities | (cities,_) <- adjacent roadmap city1 ]) | city1 <- cities roadmap]
+getAdjacencyList roadmap = [(city1, [cities | (cities,_) <- adjacent roadmap city1 ]) | city1 <- cities roadmap]
 
 ------------------------------------------------------------------------------------------------------------------------------
 
@@ -166,15 +166,42 @@ dfs city paths visited
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected roadmap = 
-    let adjList  = getAdjacencyList roadmap
+    let adjList = getAdjacencyList roadmap
         nCities = length adjList
-        stronglyConnected = [length (dfs source adjList []) == nCities | (source, _) <- adjList ]
-    in and stronglyConnected
+        (city, _, _) = head roadmap
+    in  length (dfs city adjList []) == nCities 
+
+-- os grafos são undirected, por isso a única maneira de não serem strongly connected
+-- é se existirem 2 componentes completamente separados
+-- por isso um dfs por qualquer node deve ser suficiente para chegar a todos os nodes
+-- quando testei no gTest4 foi de 1.6s para 0.6s
 
 ------------------------------------------------------------------------------------------------------------------------------
 
+removeCity :: City -> RoadMap -> RoadMap
+removeCity city = filter (\(city1, city2, _) -> city1 /= city && city2 /= city)
+
+-- Recursively find all paths between two cities
+allPaths :: RoadMap -> City -> City -> [(Path, Distance)]
+allPaths roadmap city1 city2 = go roadmap city1 city2 [] 0
+  where
+    go rmap current target path dist
+      | current == target = [(reverse (target : path), dist)]  -- Base case: reached the destination
+      | otherwise = concatMap (\(nextCity, nextDist) ->
+                                go (removeCity current rmap) nextCity target (current : path) (dist + nextDist))
+                              (adjacent rmap current)
+
+-- é assim eu pedi ao chatgpt para fazer a allPaths, eu expliquei o que queria que ele fizesse
+-- mas lá no fundo ele é que escreveu :/
+-- parece correto mas não sei bem como verificar
+-- pedi para fazer uma função allPaths que a cada passo ia acumulando distance 
+-- e dava um roadmap com todas as edges da cidade atual removidas (porque seria inútil voltar atrás)
+
 shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath = undefined
+shortestPath roadmap city1 city2 =
+    let possiblities = allPaths roadmap city1 city2
+        minVal = minimum [totalDist | (path, totalDist) <- possiblities]
+    in [path | (path, totalDist) <- possiblities , totalDist == minVal]
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
@@ -192,4 +219,5 @@ gTest2 = [("0","1",10),("0","2",15),("0","3",20),("1","2",35),("1","3",25),("2",
 gTest3 :: RoadMap -- unconnected graph
 gTest3 = [("0","1",4),("2","3",2)]
 
+gTest4 :: RoadMap
 gTest4 = concat (replicate 10000 gTest1) -- bigass graph
