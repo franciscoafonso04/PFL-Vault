@@ -178,21 +178,54 @@ isStronglyConnected roadmap =
 
 ------------------------------------------------------------------------------------------------------------------------------
 
+-- Helper Function that removes a city from the roadmap.
+--
+-- Parameters:
+--   city - The city to be removed.
+--   roadmap - A list of tuples representing the roads between cities and their distances.
+--
+-- Returns: A new roadmap that includes all the previous edges except the ones that include the city to be removed.
+
 removeCity :: City -> RoadMap -> RoadMap
 removeCity city = filter (\(city1, city2, _) -> city1 /= city && city2 /= city)
 
--- Recursively find all paths between two cities
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Helper Function that generates all possible paths from one city to another.
+--
+-- Parameters:
+--   roadmap - A list of tuples representing the roads between cities and their distances.
+--   current - The city we are currently on, the beggining of the traversal.
+--   target - The city we want to reach.
+--   visited - A list off all of the cities we have visited.
+--   totalDist - The distance of the path so far.
+--
+-- Returns: A list of tuples of all possible paths between current and target, with the total distance of the path.
+
 allPaths :: RoadMap -> City -> City -> [City] -> Distance -> [(Path, Distance)]
-allPaths roadmap current target visited dist 
-    | current == target = [(reverse (current : visited), dist)]  -- Base case: reached the destination
+allPaths roadmap current target visited totalDist 
+    | current == target = [(reverse (current : visited), totalDist)]
     | otherwise = [path | (nextCity, nextDist) <- adjacent roadmap current, 
-                   path <- allPaths (removeCity current roadmap) nextCity target (current : visited) (dist + nextDist)]
+                   path <- allPaths (removeCity current roadmap) nextCity target (current : visited) (totalDist + nextDist)]
+
+------------------------------------------------------------------------------------------------------------------------------ 
+
+-- Computes all possible shortest paths from start to finish.
+--
+-- Parameters:
+--   roadmap - A list of tuples representing the roads between cities and their distances.
+--   start - The city we start our traversal.
+--   finish - The city we want to reach.
+--   
+-- Returns: A list of all possible shortest paths from start to finish.
 
 shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath roadmap city1 city2 =
-    let possiblities = allPaths roadmap city1 city2 [] 0
+shortestPath roadmap start finish =
+    let possiblities = allPaths roadmap start finish [] 0
         minVal = minimum [totalDist | (path, totalDist) <- possiblities]
     in [path | (path, totalDist) <- possiblities , totalDist == minVal]
+
+------------------------------------------------------------------------------------------------------------------------------ 
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
