@@ -225,6 +225,13 @@ shortestPath roadmap start finish =
         minVal = minimum [totalDist | (path, totalDist) <- possiblities]
     in [path | (path, totalDist) <- possiblities , totalDist == minVal]
 
+-- é um bocado ineficiente, a única maneira de melhorar seria parar de procurar mal a totalDist fosse
+-- maior que a dist do melhor path, mas para isso temos de saber a dist do melhor path
+-- não sei como passar esse valor a meio de uma recursão, só com uma variavel global
+-- mas as coisas no haskell sao imutaveis >:(
+-- por isso o quão wild é que seria fazer o best path, guardar esse valor e depois fazer todos os outros
+-- live laugh love
+
 ------------------------------------------------------------------------------------------------------------------------------ 
 
 travelSales :: RoadMap -> Path
@@ -247,7 +254,10 @@ gTest4 :: RoadMap
 gTest4 = concat (replicate 10000 gTest1) -- bigass graph
 
 gTest5 :: RoadMap
-gTest5 =
+gTest5 = [("0","1",1),("0","2",1),("0","3",1),("1","4",1),("2","4",1),("3","4",1)]
+
+gTest6 :: RoadMap
+gTest6 =
     [("7","6",1),("8","2",2),("6","5",2),("0","1",4),("2","5",4),("8","6",6),
      ("2","3",7),("7","8",7),("0","7",8),("1","2",8),("3","4",9),("5","4",10),
      ("1","7",11),("3","5",14),
