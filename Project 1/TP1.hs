@@ -1,6 +1,8 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Replace case with fromMaybe" #-}
 import qualified Data.List
 import qualified Data.Array
---import qualified Data.Bits
+import qualified Data.Bits
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -241,18 +243,27 @@ travelSales roadmap =
         startCity = head allCities
         cityIndex = Array.listArray (0,n-1) allCities
 
-        
-
         -- mask table 
         table = Array.array ((0,0), (n-1, (1 `shiftL` n) - 1)) [(i, Nothing) | i <- [0..n-1], mask <- [0..(1 `shiftL` n)-1]]
-    in tspSolver roadmap startCity cityIndex table 0 0
+        
+    in tspSolver roadmap startCity cityIndex table
 
-tspSolver :: Roadmap -> City -> Array.Array Int City -> Array.Array (Int, Int) (Maybe Int) -> Int -> Int -> Int
+tspSolver :: RoadMap -> City -> Array.Array Int City -> Array.Array (Int, Int) (Maybe Int) -> Int -> Int -> Int
 tspSolver roadmap start cityIndex dpTable pos visited = 
     if visited == (1 `shiftL` n) - 1  -- All cities visited
-    then maxBound (distance roadmap (cityIndex ! pos) start)  -- ver isto pq n podemos usar Data.Maybe e a distance pode dar um maybe
-    else if memo ! (pos, visited) /= Nothing -- Checks if the result for the (pos, visited) has already been computed
-
+        then case distance roadmap (cityIndex ! pos) start of
+            Just dist -> dist
+            Nothing -> maxBound  -- ver isto pq n podemos usar Data.Maybe e a distance pode dar um maybe
+    else 
+        case dpTable ! (pos, visited) of 
+            Just result -> result
+            Nothing ->
+                let unvisitedCities = [next | next <- [0..n-1], (visited .&. (1 `shiftL` next)) == 0]
+                    bestDistance = minimum [case distance roadmap (cityIndex ! pos) (cityIndex ! next) of 
+                                                Just d -> d + tspSolver roadmap start cityIndex dpTable next (visited .|. (1 `shiftL` next))
+                                                Nothing -> maxBound
+                                            | next <- unvisitedCities]
+                in bestDistance 
 
 
 tspBruteForce :: RoadMap -> Path
