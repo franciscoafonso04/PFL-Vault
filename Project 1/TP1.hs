@@ -1,5 +1,5 @@
 import qualified Data.List
---import qualified Data.Array
+import qualified Data.Array
 --import qualified Data.Bits
 
 -- PFL 2024/2025 Practical assignment 1
@@ -223,7 +223,7 @@ shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start finish =
     let possiblities = allPaths roadmap start finish [] 0
         minVal = minimum [totalDist | (path, totalDist) <- possiblities]
-    in [path | (path, totalDist) <- possiblities , totalDist == minVal]
+    in [path | (path, totalDist) <- possiblities, totalDist == minVal]
 
 -- é um bocado ineficiente, a única maneira de melhorar seria parar de procurar mal a totalDist fosse
 -- maior que a dist do melhor path, mas para isso temos de saber a dist do melhor path
@@ -235,7 +235,25 @@ shortestPath roadmap start finish =
 ------------------------------------------------------------------------------------------------------------------------------ 
 
 travelSales :: RoadMap -> Path
-travelSales = undefined
+travelSales roadmap =
+    let allCities = cities roadmap
+        nCities = length allCities
+        startCity = head allCities
+        cityIndex = Array.listArray (0,n-1) allCities
+
+        
+
+        -- mask table 
+        table = Array.array ((0,0), (n-1, (1 `shiftL` n) - 1)) [(i, Nothing) | i <- [0..n-1], mask <- [0..(1 `shiftL` n)-1]]
+    in tspSolver roadmap startCity cityIndex table 0 0
+
+tspSolver :: Roadmap -> City -> Array.Array Int City -> Array.Array (Int, Int) (Maybe Int) -> Int -> Int -> Int
+tspSolver roadmap start cityIndex dpTable pos visited = 
+    if visited == (1 `shiftL` n) - 1  -- All cities visited
+    then maxBound (distance roadmap (cityIndex ! pos) start)  -- ver isto pq n podemos usar Data.Maybe e a distance pode dar um maybe
+    else if memo ! (pos, visited) /= Nothing -- Checks if the result for the (pos, visited) has already been computed
+
+
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
