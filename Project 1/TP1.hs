@@ -222,31 +222,29 @@ allPaths roadmap current target visited totalDist
 -- Returns: A list of all possible shortest paths from start to finish.
 
 
+-- Function to find all shortest paths using BFS
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start finish
-    | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself
-    | otherwise = dijkstra [([start],0)] [] [] Nothing
+    | start == finish = [[start]]
+    | otherwise = bfs [([start], 0)] [] Nothing
   where
-    -- Recursive Dijkstra-based BFS
-    dijkstra :: [(Path, Distance)] -> [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
-    dijkstra [] _ paths _ = paths  -- Return all found shortest paths when no more to explore
-    dijkstra ((path, dist):queue) visited paths minDist
-        | current == finish && (minDist == Nothing || Just dist == minDist) =
-            dijkstra queue visited (path : paths) (Just dist)
-        | current == finish = paths  -- Stop when we’ve found all shortest paths
-        | otherwise = dijkstra (sortOn snd (queue ++ nextPaths)) ((path, dist) : visited) paths minDist
+    -- BFS helper function with cumulative distance tracking
+    bfs :: [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
+    bfs [] paths _ = nub paths  -- Return all found shortest paths when no more to explore
+    bfs ((path, dist):queue) paths minDist
+        | current == finish = -- When we reach the finish city
+            case minDist of
+                Nothing -> bfs queue (path : paths) (Just dist)  -- First found path to finish
+                Just m  -> if dist == m 
+                            then bfs queue (path : paths) (Just m)  -- Same as current min distance
+                            else bfs queue paths (Just m)  -- Ignore since this is longer
+        | otherwise = bfs (queue ++ validNextPaths) paths minDist
       where
-        current = last path  -- Current city is the last in the current path
-        -- Expand adjacent cities that haven’t been visited in the current path
-        nextPaths = [(path ++ [nextCity], dist + nextDist) |
-                     (nextCity, nextDist) <- adjacent roadmap current,
-                     nextCity `notElem` path,
-                     notElem nextCity (concatMap fst visited) || dist + nextDist <= maybe inf id minDist]
-
-    -- Placeholder for an infinite distance value
-    inf :: Distance
-    inf = maxBound
-    
+        current = last path
+        -- Generate valid paths to adjacent cities, ensuring they don't exceed minDist once set
+        validNextPaths = [(path ++ [nextCity], dist + nextDist) |
+                          (nextCity, nextDist) <- adjacent roadmap current,
+                          nextCity `notElem` path]  -- Avoid cycles
 
 
 -- shortestPath roadmap start finish =
