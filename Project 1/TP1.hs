@@ -1,8 +1,8 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Replace case with fromMaybe" #-}
+
 import qualified Data.List
 import qualified Data.Array
 import qualified Data.Bits
+import Data.List (nub, sortOn)
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -221,50 +221,56 @@ allPaths roadmap current target visited totalDist
 --   
 -- Returns: A list of all possible shortest paths from start to finish.
 
+
 shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath roadmap start finish =
-    let possiblities = allPaths roadmap start finish [] 0
-        minVal = minimum [totalDist | (path, totalDist) <- possiblities]
-    in [path | (path, totalDist) <- possiblities, totalDist == minVal]
+shortestPath roadmap start finish
+    | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself
+    | otherwise = dijkstra [([start],0)] [] [] Nothing
+  where
+    -- Recursive Dijkstra-based BFS
+    dijkstra :: [(Path, Distance)] -> [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
+    dijkstra [] _ paths _ = paths  -- Return all found shortest paths when no more to explore
+    dijkstra ((path, dist):queue) visited paths minDist
+        | current == finish && (minDist == Nothing || Just dist == minDist) =
+            dijkstra queue visited (path : paths) (Just dist)
+        | current == finish = paths  -- Stop when we’ve found all shortest paths
+        | otherwise = dijkstra (sortOn snd (queue ++ nextPaths)) ((path, dist) : visited) paths minDist
+      where
+        current = last path  -- Current city is the last in the current path
+        -- Expand adjacent cities that haven’t been visited in the current path
+        nextPaths = [(path ++ [nextCity], dist + nextDist) |
+                     (nextCity, nextDist) <- adjacent roadmap current,
+                     nextCity `notElem` path,
+                     notElem nextCity (concatMap fst visited) || dist + nextDist <= maybe inf id minDist]
 
--- é um bocado ineficiente, a única maneira de melhorar seria parar de procurar mal a totalDist fosse
--- maior que a dist do melhor path, mas para isso temos de saber a dist do melhor path
--- não sei como passar esse valor a meio de uma recursão, só com uma variavel global
--- mas as coisas no haskell sao imutaveis >:(
--- por isso o quão wild é que seria fazer o best path, guardar esse valor e depois fazer todos os outros
--- live laugh love
+    -- Placeholder for an infinite distance value
+    inf :: Distance
+    inf = maxBound
+    
 
------------------------------------------------------------------------------------------------------------------------------- 
+
+-- shortestPath roadmap start finish =
+--    let possiblities = allPaths roadmap start finish [] 0
+--        minVal = minimum [totalDist | (path, totalDist) <- possiblities]
+--    in [path | (path, totalDist) <- possiblities, totalDist == minVal]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 travelSales :: RoadMap -> Path
-travelSales roadmap =
-    let allCities = cities roadmap
-        nCities = length allCities
-        startCity = head allCities
-        cityIndex = Array.listArray (0,n-1) allCities
-
-        -- mask table 
-        table = Array.array ((0,0), (n-1, (1 `shiftL` n) - 1)) [(i, Nothing) | i <- [0..n-1], mask <- [0..(1 `shiftL` n)-1]]
-        
-    in tspSolver roadmap startCity cityIndex table
-
-tspSolver :: RoadMap -> City -> Array.Array Int City -> Array.Array (Int, Int) (Maybe Int) -> Int -> Int -> Int
-tspSolver roadmap start cityIndex dpTable pos visited = 
-    if visited == (1 `shiftL` n) - 1  -- All cities visited
-        then case distance roadmap (cityIndex ! pos) start of
-            Just dist -> dist
-            Nothing -> maxBound  -- ver isto pq n podemos usar Data.Maybe e a distance pode dar um maybe
-    else 
-        case dpTable ! (pos, visited) of 
-            Just result -> result
-            Nothing ->
-                let unvisitedCities = [next | next <- [0..n-1], (visited .&. (1 `shiftL` next)) == 0]
-                    bestDistance = minimum [case distance roadmap (cityIndex ! pos) (cityIndex ! next) of 
-                                                Just d -> d + tspSolver roadmap start cityIndex dpTable next (visited .|. (1 `shiftL` next))
-                                                Nothing -> maxBound
-                                            | next <- unvisitedCities]
-                in bestDistance 
-
+travelSales roadmap = undefined
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
