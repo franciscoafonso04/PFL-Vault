@@ -173,44 +173,7 @@ isStronglyConnected roadmap =
         (city, _, _) = head roadmap
     in  length (dfs city adjList []) == nCities 
 
--- os grafos são undirected, por isso a única maneira de não serem strongly connected
--- é se existirem 2 componentes completamente separados
--- por isso um dfs por qualquer node deve ser suficiente para chegar a todos os nodes
--- quando testei no gTest4 foi de 1.6s para 0.6s
-
 ------------------------------------------------------------------------------------------------------------------------------
-
--- Helper Function that removes a city from the roadmap.
---
--- Parameters:
---   city - The city to be removed.
---   roadmap - A list of tuples representing the roads between cities and their distances.
---
--- Returns: A new roadmap that includes all the previous edges except the ones that include the city to be removed.
-
-removeCity :: City -> RoadMap -> RoadMap
-removeCity city = filter (\(city1, city2, _) -> city1 /= city && city2 /= city)
-
-------------------------------------------------------------------------------------------------------------------------------
-
--- Helper Function that generates all possible paths from one city to another.
---
--- Parameters:
---   roadmap - A list of tuples representing the roads between cities and their distances.
---   current - The city we are currently on, the beggining of the traversal.
---   target - The city we want to reach.
---   visited - A list off all of the cities we have visited.
---   totalDist - The distance of the path so far.
---
--- Returns: A list of tuples of all possible paths between current and target, with the total distance of the path.
-
-allPaths :: RoadMap -> City -> City -> [City] -> Distance -> [(Path, Distance)]
-allPaths roadmap current target visited totalDist 
-    | current == target = [(reverse (current : visited), totalDist)]
-    | otherwise = [path | (nextCity, nextDist) <- adjacent roadmap current, 
-                   path <- allPaths (removeCity current roadmap) nextCity target (current : visited) (totalDist + nextDist)]
-
------------------------------------------------------------------------------------------------------------------------------- 
 
 -- Computes all possible shortest paths from start to finish.
 --
@@ -221,51 +184,40 @@ allPaths roadmap current target visited totalDist
 --   
 -- Returns: A list of all possible shortest paths from start to finish.
 
-
--- Function to find all shortest paths using BFS
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start finish
-    | start == finish = [[start]]
+    | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself.
     | otherwise = bfs [([start], 0)] [] Nothing
   where
-    -- BFS helper function with cumulative distance tracking
+
+    -- BFS helper function to explore paths layer-by-layer, tracking cumulative distance.
+    -- 
+    -- Parameters:
+    --   queue - A list of (Path, Distance) pairs representing paths to explore and their current distances.
+    --   paths - A list of all shortest paths found so far with the minimum distance.
+    --   minDist - The minimum distance for any path to the finish found so far.
+    --
+    -- Returns: A list of all paths that reach finish with the shortest possible distance.
+
     bfs :: [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
-    bfs [] paths _ = nub paths  -- Return all found shortest paths when no more to explore
+    bfs [] paths _ = nub paths  -- Return all found shortest paths when the queue is empty.
     bfs ((path, dist):queue) paths minDist
-        | current == finish = -- When we reach the finish city
+        | current == finish = -- When we reach the finish city, check if this path is among the shortest.
             case minDist of
-                Nothing -> bfs queue (path : paths) (Just dist)  -- First found path to finish
+                Nothing -> bfs queue (path : paths) (Just dist)  -- First path to finish sets minDist.
                 Just m  -> if dist == m 
-                            then bfs queue (path : paths) (Just m)  -- Same as current min distance
-                            else bfs queue paths (Just m)  -- Ignore since this is longer
-        | otherwise = bfs (queue ++ validNextPaths) paths minDist
+                            then bfs queue (path : paths) (Just m)  -- Add path if it matches the min distance.
+                            else bfs queue paths (Just m)  -- Ignore if distance equals min distance.
+        | otherwise = bfs (queue ++ validNextPaths) paths minDist  -- Continue exploring other paths.
       where
-        current = last path
-        -- Generate valid paths to adjacent cities, ensuring they don't exceed minDist once set
-        validNextPaths = [(path ++ [nextCity], dist + nextDist) |
+
+        current = last path  -- Current city is the last city in the path.
+        validNextPaths = [(path ++ [nextCity], dist + nextDist) | -- Generate valid next paths by adding neighboring cities  
+                                                                  -- that are not already visited in the current path.
                           (nextCity, nextDist) <- adjacent roadmap current,
-                          nextCity `notElem` path]  -- Avoid cycles
+                          nextCity `notElem` path]  -- Avoid cycles by ensuring nextCity is not already in path.
 
-
--- shortestPath roadmap start finish =
---    let possiblities = allPaths roadmap start finish [] 0
---        minVal = minimum [totalDist | (path, totalDist) <- possiblities]
---    in [path | (path, totalDist) <- possiblities, totalDist == minVal]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+------------------------------------------------------------------------------------------------------------------------------
 
 travelSales :: RoadMap -> Path
 travelSales roadmap = undefined
