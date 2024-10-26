@@ -2,7 +2,6 @@
 import qualified Data.List
 import qualified Data.Array
 import qualified Data.Bits
-import Data.List (nub, sortOn)
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -200,7 +199,7 @@ shortestPath roadmap start finish
     -- Returns: A list of all paths that reach finish with the shortest possible distance.
 
     bfs :: [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
-    bfs [] paths _ = nub paths  -- Return all found shortest paths when the queue is empty.
+    bfs [] paths _ = Data.List.nub paths  -- Return all found shortest paths when the queue is empty.
     bfs ((path, dist):queue) paths minDist
         | current == finish = -- When we reach the finish city, check if this path is among the shortest.
             case minDist of
@@ -221,6 +220,8 @@ shortestPath roadmap start finish
 
 travelSales :: RoadMap -> Path
 travelSales roadmap = undefined
+
+
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
