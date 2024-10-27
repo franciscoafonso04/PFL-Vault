@@ -186,62 +186,68 @@ isStronglyConnected roadmap =
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start finish
     | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself.
-    | otherwise = bfs [([start], 0)] [] Nothing
+    | otherwise = bfs roadmap start finish [([start], 0)] [] Nothing
   where
 
-    -- BFS helper function to explore paths layer-by-layer, tracking cumulative distance.
-    -- 
-    -- Parameters:
-    --   queue - A list of (Path, Distance) pairs representing paths to explore and their current distances.
-    --   paths - A list of all shortest paths found so far with the minimum distance.
-    --   minDist - The minimum distance for any path to the finish found so far.
-    --
-    -- Returns: A list of all paths that reach finish with the shortest possible distance.
+-- BFS helper function to explore paths layer-by-layer, tracking cumulative distance.
+-- 
+-- Parameters:
+--   r - A list of tuples representing the roads between cities and their distances.
+--   s - The city we start our traversal.
+--   f - The city we want to reach.
+--   queue - A list of (Path, Distance) pairs representing paths to explore and their current distances.
+--   paths - A list of all shortest paths found so far with the minimum distance.
+--   minDist - The minimum distance for any path to the finish found so far.
+--
+-- Returns: A list of all paths that reach finish with the shortest possible distance.
 
-    bfs :: [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
-    bfs [] paths _ = Data.List.nub paths  -- Return all found shortest paths when the queue is empty.
-    bfs ((path, dist):queue) paths minDist
-        | current == finish = -- When we reach the finish city, check if this path is among the shortest.
-            case minDist of
-                Nothing -> bfs queue (path : paths) (Just dist)  -- First path to finish sets minDist.
-                Just m  -> if dist == m
-                            then bfs queue (path : paths) (Just m)  -- Add path if it matches the min distance.
-                            else bfs queue paths (Just m)  -- Ignore if distance equals min distance.
-        | otherwise = bfs (queue ++ validNextPaths) paths minDist  -- Continue exploring other paths.
-      where
+bfs :: RoadMap -> City -> City -> [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
+bfs r s f [] paths _ = Data.List.nub paths  -- Return all found shortest paths when the queue is empty.
+bfs r s f ((path, dist):queue) paths minDist
+    | current == f = -- When we reach the finish city, check if this path is among the shortest.
+        case minDist of
+            Nothing -> bfs r s f queue (path : paths) (Just dist)  -- First path to finish sets minDist.
+            Just m  -> if dist == m
+                        then bfs r s f queue (path : paths) (Just m)  -- Add path if it matches the min distance.
+                        else bfs r s f queue paths (Just m)  -- Ignore if distance equals min distance.
+    | otherwise = bfs r s f(queue ++ validNextPaths) paths minDist  -- Continue exploring other paths.
+    where
 
-        current = last path  -- Current city is the last city in the path.
-        validNextPaths = [(path ++ [nextCity], dist + nextDist) | -- Generate valid next paths by adding neighboring cities  
-                                                                  -- that are not already visited in the current path.
-                          (nextCity, nextDist) <- adjacent roadmap current,
-                          nextCity `notElem` path]  -- Avoid cycles by ensuring nextCity is not already in path.
+    current = last path  -- Current city is the last city in the path.
+    validNextPaths = [(path ++ [nextCity], dist + nextDist) | -- Generate valid next paths by adding neighboring cities  
+                                                                -- that are not already visited in the current path.
+                        (nextCity, nextDist) <- adjacent r current,
+                        nextCity `notElem` path]  -- Avoid cycles by ensuring nextCity is not already in path.
 
 ------------------------------------------------------------------------------------------------------------------------------
 
--- Adds start and end cities to make a full tour path
-addEnds :: Path -> City -> Path
-addEnds path start = start : path ++ [start]
-
--- Solves the Traveling Salesman Problem by finding the shortest path that visits all cities exactly once
+-- Computes the Traveling Salesman path using a modified BFS search
 travelSales :: RoadMap -> Path
 travelSales roadmap =
-    case cities roadmap of
-        [] -> []
-        [c] -> [c]  -- If there's only one city, return it as the path
-        allCities ->
-            let start = head allCities  -- Choose the first city as the starting point
-                perms = Data.List.permutations (tail allCities)  -- Generate all permutations of the remaining cities
-                paths = map (`addEnds` start) perms  -- Create paths that start and end with the starting city
-                validPaths = [(p, pathDistance roadmap p) | p <- paths, pathDistance roadmap p /= Nothing]  -- Filter valid paths
-            in if null validPaths
-               then []  -- Return an empty list if no valid paths are found
-               else fst (minimumBy (\(_, Just d1) (_, Just d2) -> compare d1 d2) validPaths)
-  where
-    -- Helper function to find the minimum by a comparison function
-    minimumBy :: (a -> a -> Ordering) -> [a] -> a
-    minimumBy _ [] = error "Empty list"  -- Should not happen since validPaths will have at least one element when reached
-    minimumBy cmp (x:xs) = foldl (\acc y -> if cmp y acc == LT then y else acc) x xs
+    let allCities = cities roadmap
+        start = head allCities
+        completePaths = bfsTsp roadmap start [([start], 0)] [] allCities
+    in if null completePaths
+       then []  -- No valid TSP path found
+       else fst (Data.List.minimumBy (\(_, d1) (_, d2) -> compare d1 d2) completePaths)
 
+-- Modified BFS for TSP requirements
+bfsTsp :: RoadMap -> City -> [(Path, Distance)] -> [(Path, Distance)] -> [City] -> [(Path, Distance)]
+bfsTsp _ _ [] completePaths _ = completePaths  -- Return all complete paths when queue is empty
+bfsTsp roadmap start ((path, dist):queue) completePaths allCities
+    | isCompleteTSPPath path start allCities = bfsTsp roadmap start queue ((path, dist):completePaths) allCities
+    | otherwise = bfsTsp roadmap start (queue ++ nextPaths) completePaths allCities
+  where
+    current = last path
+    -- Generate next paths by adding adjacent cities not yet visited in this path
+    nextPaths = [(path ++ [nextCity], dist + nextDist) |
+                 (nextCity, nextDist) <- adjacent roadmap current,
+                 nextCity `notElem` path || (length path == length allCities && nextCity == start)]  -- End at start
+
+-- Check if the current path forms a complete TSP cycle
+isCompleteTSPPath :: Path -> City -> [City] -> Bool
+isCompleteTSPPath path start allCities =
+    length path == length allCities + 1 && head path == start && last path == start
 
 
 tspBruteForce :: RoadMap -> Path
@@ -265,3 +271,6 @@ gTest5 = [("0", "34", 11), ("24", "35", 7), ("35", "6", 11), ("3", "49", 16), ("
 
 gTest6 :: RoadMap -- bigass graph, kinda bad
 gTest6 = concat (replicate 10000 gTest1)
+
+
+

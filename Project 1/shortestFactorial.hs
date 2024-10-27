@@ -1,6 +1,7 @@
 -- APENAS USAR ESTAS FUNÇÕES SE O SHORTESTPATH BFS CORRER MUITO MAL
 -- basicamente fiz este ficheiro para dar cleanup no ficheiro principal
 -- mal o bfs estiver 100% operacional eliminamos isto
+import qualified Data.List
 
 type City = String
 type Path = [City]
@@ -68,3 +69,25 @@ shortestPath roadmap start finish =
    let possiblities = allPaths roadmap start finish [] 0
        minVal = minimum [totalDist | (path, totalDist) <- possiblities]
    in [path | (path, totalDist) <- possiblities, totalDist == minVal]
+
+addEnds :: Path -> City -> Path
+addEnds path start = start : path ++ [start]
+
+travelSales :: RoadMap -> Path
+travelSales roadmap =
+    case cities roadmap of
+        [] -> []
+        [c] -> [c]  -- If there's only one city, return it as the path
+        allCities ->
+            let start = head allCities  -- Choose the first city as the starting point
+                perms = Data.List.permutations (tail allCities)  -- Generate all permutations of the remaining cities
+                paths = map (`addEnds` start) perms  -- Create paths that start and end with the starting city
+                validPaths = [(p, pathDistance roadmap p) | p <- paths, pathDistance roadmap p /= Nothing]  -- Filter valid paths
+            in if null validPaths
+               then []  -- Return an empty list if no valid paths are found
+               else fst (minimumBy (\(_, Just d1) (_, Just d2) -> compare d1 d2) validPaths)
+  where
+    -- Helper function to find the minimum by a comparison function
+    minimumBy :: (a -> a -> Ordering) -> [a] -> a
+    minimumBy _ [] = error "Empty list"  -- Should not happen since validPaths will have at least one element when reached
+    minimumBy cmp (x:xs) = foldl (\acc y -> if cmp y acc == LT then y else acc) x xs
