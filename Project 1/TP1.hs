@@ -11,8 +11,13 @@ type City = String
 type Path = [City]
 type Distance = Int
 type RoadMap = [(City,City,Distance)]
+type AdjMatrix = Data.Array.Array (Int,Int) (Maybe Distance)
+type Visited = Integer
 
-------------------------------------------------------------------------------------------------------------------------------  
+infinite :: Distance
+infinite = 100000000
+
+-----------------------------------------------------------------------------------------------------------------------------  
 
 -- Extracts unique cities from a RoadMap, a list of (city1, city2, distance) tuples, representing roads between cities.
 --
@@ -174,21 +179,6 @@ isStronglyConnected roadmap =
 
 ------------------------------------------------------------------------------------------------------------------------------
 
--- Computes all possible shortest paths from start to finish.
---
--- Parameters:
---   roadmap - A list of tuples representing the roads between cities and their distances.
---   start - The city we start our traversal.
---   finish - The city we want to reach.
---   
--- Returns: A list of all possible shortest paths from start to finish.
-
-shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath roadmap start finish
-    | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself.
-    | otherwise = bfs roadmap start finish [([start], 0)] [] Nothing
-  where
-
 -- BFS helper function to explore paths layer-by-layer, tracking cumulative distance.
 -- 
 -- Parameters:
@@ -221,35 +211,131 @@ bfs r s f ((path, dist):queue) paths minDist
 
 ------------------------------------------------------------------------------------------------------------------------------
 
--- Computes the Traveling Salesman path using a modified BFS search
-travelSales :: RoadMap -> Path
-travelSales roadmap =
-    let allCities = cities roadmap
-        start = head allCities
-        completePaths = bfsTsp roadmap start [([start], 0)] [] allCities
-    in if null completePaths
-       then []  -- No valid TSP path found
-       else fst (Data.List.minimumBy (\(_, d1) (_, d2) -> compare d1 d2) completePaths)
+-- Computes all possible shortest paths from start to finish.
+--
+-- Parameters:
+--   roadmap - A list of tuples representing the roads between cities and their distances.
+--   start - The city we start our traversal.
+--   finish - The city we want to reach.
+--   
+-- Returns: A list of all possible shortest paths from start to finish.
 
--- Modified BFS for TSP requirements
-bfsTsp :: RoadMap -> City -> [(Path, Distance)] -> [(Path, Distance)] -> [City] -> [(Path, Distance)]
-bfsTsp _ _ [] completePaths _ = completePaths  -- Return all complete paths when queue is empty
-bfsTsp roadmap start ((path, dist):queue) completePaths allCities
-    | isCompleteTSPPath path start allCities = bfsTsp roadmap start queue ((path, dist):completePaths) allCities
-    | otherwise = bfsTsp roadmap start (queue ++ nextPaths) completePaths allCities
+shortestPath :: RoadMap -> City -> City -> [Path]
+shortestPath roadmap start finish
+    | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself.
+    | otherwise = bfs roadmap start finish [([start], 0)] [] Nothing
+  
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Constructs an adjacency matrix for the Traveling Salesman Problem (TSP) representation.
+--
+-- Parameters:
+--   roadmap - A representation of the roadmap consisting of cities and distances between them.
+--
+-- Returns: 
+--   An adjacency matrix where each element (i, j) contains the distance between cities i and j.
+--   If there is no direct road between the cities, the value is Nothing.
+
+tspMatrix :: RoadMap -> AdjMatrix
+tspMatrix roadmap = Data.Array.array bounds matrix
   where
-    current = last path
-    -- Generate next paths by adding adjacent cities not yet visited in this path
-    nextPaths = [(path ++ [nextCity], dist + nextDist) |
-                 (nextCity, nextDist) <- adjacent roadmap current,
-                 nextCity `notElem` path || (length path == length allCities && nextCity == start)]  -- End at start
+    citiesList = cities roadmap
+    nCities = length citiesList
+    bounds = ((0, 0), (nCities - 1, nCities - 1))
+    matrix = [((i, j), distance roadmap (show i) (show j)) | i <- [0..(nCities - 1)], j <- [0..(nCities - 1)]]
 
--- Check if the current path forms a complete TSP cycle
-isCompleteTSPPath :: Path -> City -> [City] -> Bool
-isCompleteTSPPath path start allCities =
-    length path == length allCities + 1 && head path == start && last path == start
+------------------------------------------------------------------------------------------------------------------------------
 
+-- Generates a bitmask indicating all cities have been visited.
+--
+-- Parameters:
+--   cityCount - The total number of cities in the roadmap.
+--
+-- Returns:
+--   A bitmask where all bits are set to 1, representing that all cities have been visited.
 
+allCitiesVisited :: Int -> Visited
+allCitiesVisited cityCount = (1 `Data.Bits.shiftL` cityCount) - 1
+
+------------------------------------------------------------------------------------------------------------------------------
+-- Checks if a specific city has been visited using a bitwise AND operation.
+--
+-- Parameters:
+--   bit - The current bitmask representing visited cities.
+--   cityIndex - The index of the city to check.
+--
+-- Returns:
+--   A boolean value indicating whether the specified city has been visited (True) or not (False).
+
+isVisited :: Visited -> Int -> Bool
+isVisited bit cityIndex = (bit Data.Bits..&. (1 `Data.Bits.shiftL` cityIndex)) /= 0
+
+------------------------------------------------------------------------------------------------------------------------------
+-- Updates the bitmask to mark a specific city as visited using a bitwise OR operation.
+--
+-- Parameters:
+--   bit - The current bitmask representing visited cities.
+--   cityIndex - The index of the city to mark as visited.
+--
+-- Returns:
+--   The updated bitmask with the specified city marked as visited.
+
+visitCity :: Visited -> Int -> Visited
+visitCity bit cityIndex = bit Data.Bits..|. (1 `Data.Bits.shiftL` cityIndex)
+
+------------------------------------------------------------------------------------------------------------------------------
+-- Recursively finds the shortest path in the adjacency matrix using a depth-first search approach.
+--
+-- Parameters:
+--   matrix - The adjacency matrix representing distances between cities.
+--   visited - A bitmask representing the cities that have been visited so far.
+--   index - The current city index being visited.
+--   allCitiesVisit - A bitmask representing all cities that need to be visited.
+--   path - The current path being explored.
+--
+-- Returns:
+--   A tuple containing the total distance of the shortest path and the corresponding path taken.
+
+findShortestPath :: AdjMatrix -> Visited -> Int -> Visited -> Path -> (Distance, Path)
+findShortestPath matrix visited index allCitiesVisit path
+    | visited == allCitiesVisit = 
+        case matrix Data.Array.! (index, 0) of 
+            Just dist -> (dist, reverse (show index : path)) 
+            Nothing ->  (100000000, []) 
+    | otherwise = 
+        let ((_, _), (maxCity, _)) = Data.Array.bounds matrix
+            distancePaths = [ (dist + newDist, newCityPath)
+                        | nextCity <- [0..maxCity], not (isVisited visited nextCity),
+                          let dist = case matrix Data.Array.! (index, nextCity) of
+                                        Just d -> d
+                                        Nothing -> infinite, 
+                          let (newDist, newCityPath) = findShortestPath matrix (visitCity visited nextCity) nextCity allCitiesVisit (show index : path)] 
+            (minDist, minPath) = minimum distancePaths
+        in  (minDist, minPath) 
+
+------------------------------------------------------------------------------------------------------------------------------
+-- Solves the Traveling Salesman Problem (TSP) by finding the shortest tour that visits all cities.
+--
+-- Parameters:
+--   roadmap - A representation of the roadmap consisting of cities and distances between them.
+--
+-- Returns:
+--   A path representing the shortest tour that visits all cities and returns to the starting city.
+--   If the roadmap is not strongly connected, returns an empty list.
+
+travelSales :: RoadMap ->  Path
+travelSales roadmap
+    | not (isStronglyConnected roadmap)  = [] 
+    | otherwise = completeTour ++ ["0"]
+    where 
+        matrix = tspMatrix roadmap
+        visitedMask = visitCity (1 `Data.Bits.shiftL` 0) 0
+        totalCities = length (cities roadmap)
+        visited = allCitiesVisited totalCities
+        completeTour =  snd (findShortestPath matrix visitedMask 0 visited []) 
+
+------------------------------------------------------------------------------------------------------------------------------
+    
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
 
