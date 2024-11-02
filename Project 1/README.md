@@ -69,14 +69,16 @@ In this README file, we will also provide a walkthrough of the `shortestPath` an
 
     Converts the roadmap to an adjacency matrix for efficient distance lookups.
     Each cell (i, j) holds the distance between cities i and j, and the matrix bounds are set based on the number of cities.
-    Example matrix layout for four cities (0, 1, 2, and 3)
+    Example matrix layout for gTest4.
 
-    |    | 0  | 1  | 2  | 3  |
-    |----|----|----|----|----|
-    |  0 |  0 | 10 | 15 | 20 |
-    |  1 | 10 |  0 | 35 | 25 |
-    |  2 | 15 | 35 |  0 | 30 |
-    |  3 | 20 | 25 | 30 |  0 |
+    |    |   0    |    1    |    2    |    3    |    4    |
+    |----|--------|---------|---------|---------|---------|
+    |  0 | Just 0 | Just 1  | Just 1  | Just 1  | Nothing |
+    |  1 | Just 1 | Just 0  | Nothing | Nothing | Just 1  |
+    |  2 | Just 1 | Nothing | Just 0  | Nothing | Just 1  |
+    |  3 | Just 1 | Nothing | Nothing | Just 0  | Just 1  |
+    |  4 | Nothing| Just 1  | Just 1  | Just 1  | Just 0  |
+
 
 2. **Bit Masking for Tracking Visited Cities**
 

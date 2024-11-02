@@ -258,6 +258,7 @@ allCitiesVisited :: Int -> Visited
 allCitiesVisited cityCount = (1 `Data.Bits.shiftL` cityCount) - 1
 
 ------------------------------------------------------------------------------------------------------------------------------
+
 -- Checks if a specific city has been visited using a bitwise AND operation.
 --
 -- Parameters:
@@ -271,6 +272,7 @@ isVisited :: Visited -> Int -> Bool
 isVisited bit cityIndex = (bit Data.Bits..&. (1 `Data.Bits.shiftL` cityIndex)) /= 0
 
 ------------------------------------------------------------------------------------------------------------------------------
+
 -- Updates the bitmask to mark a specific city as visited using a bitwise OR operation.
 --
 -- Parameters:
@@ -314,6 +316,7 @@ findShortestPath matrix visited index allCitiesVisit path
         in  (minDist, minPath) 
 
 ------------------------------------------------------------------------------------------------------------------------------
+
 -- Solves the Traveling Salesman Problem (TSP) by finding the shortest tour that visits all cities.
 --
 -- Parameters:
