@@ -52,7 +52,7 @@ In this README file, we will also provide a walkthrough of the `shortestPath` an
 
 - Our solution addresses the Traveling Salesman Problem (TSP) by calculating the shortest possible path that visits each city in a given roadmap once, returning to the starting city. It employs dynamic programming with bitwise operations and an adjacency matrix representation to minimize the travel distance.
 
-- The algorithm has a time complexity of **O(n² + 2^n)**, where n is the number of cities, achieved by tracking visited cities via bit masking and recursively calculating distances to build the optimal path.
+- The algorithm has a time complexity of **O(V² + 2^V)**, where n is the number of cities, achieved by tracking visited cities via bit masking and recursively calculating distances to build the optimal path.
 
 - The solution consists of several helper functions and a main function (travelSales) that orchestrates the TSP calculation. Each function has a specific role in building the adjacency matrix, managing the bitwise mask for visited cities, and computing the minimum distance path using recursion. Here's a detailed breakdown:
 

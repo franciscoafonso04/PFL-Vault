@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Replace case with fromMaybe" #-}
 
 import qualified Data.List
 import qualified Data.Array
@@ -306,8 +308,7 @@ findShortestPath matrix visited index allCitiesVisit path
             Nothing ->  (100000000, []) 
     | otherwise = 
         let ((_, _), (maxCity, _)) = Data.Array.bounds matrix
-            distancePaths = [ (dist + newDist, newCityPath)
-                        | nextCity <- [0..maxCity], not (isVisited visited nextCity),
+            distancePaths = [ (dist + newDist, newCityPath) | nextCity <- [0..maxCity], not (isVisited visited nextCity),
                           let dist = case matrix Data.Array.! (index, nextCity) of
                                         Just d -> d
                                         Nothing -> infinite, 
