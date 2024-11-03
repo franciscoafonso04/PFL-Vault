@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Replace case with fromMaybe" #-}
 
 import qualified Data.List
 import qualified Data.Array
@@ -226,7 +224,63 @@ shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start finish
     | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself.
     | otherwise = bfs roadmap start finish [([start], 0)] [] Nothing
-  
+ 
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Maps each city to its corresponding index, creating a list of tuples where each tuple contains
+-- a city and its index.
+--
+-- Parameters:
+--   cities - A list of city names.
+--
+-- Returns:
+--   A list of tuples where each tuple consists of a city and its corresponding index.
+
+cityToIndex :: [City] -> [(City, Int)]
+cityToIndex cities = zip cities [0..]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Maps each index to its corresponding city, creating a list of tuples where each tuple contains
+-- an index and its corresponding city.
+--
+-- Parameters:
+--   cities - A list of city names.
+--
+-- Returns:
+--   A list of tuples where each tuple consists of an index and its corresponding city.
+
+indexToCity :: [City] -> [(Int, City)]
+indexToCity cities = zip [0..] cities
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Retrieves the city corresponding to a given index from a list of (index, city) pairs.
+--
+-- Parameters:
+--   indexCityPairs - A list of tuples where each tuple contains an index and its corresponding city.
+--   index - The index of the city to retrieve.
+--
+-- Returns:
+--   The city that corresponds to the provided index.
+
+getIndexCity :: [(Int, City)] -> Int -> City
+getIndexCity indexCityPairs index = head [c | (i, c) <- indexCityPairs, i == index]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Retrieves the index corresponding to a given city from a list of (city, index) pairs.
+--
+-- Parameters:
+--   cityIndexPairs - A list of tuples where each tuple contains a city and its corresponding index.
+--   city - The city whose index is to be retrieved.
+--
+-- Returns:
+--   The index that corresponds to the provided city.
+
+getCityIndex :: [(City, Int)] -> City -> Int
+getCityIndex cityIndexPairs city = head [i | (c, i) <- cityIndexPairs, c == city]
+
 ------------------------------------------------------------------------------------------------------------------------------
 
 -- Constructs an adjacency matrix for the Traveling Salesman Problem (TSP) representation.
@@ -241,10 +295,21 @@ shortestPath roadmap start finish
 tspMatrix :: RoadMap -> AdjMatrix
 tspMatrix roadmap = Data.Array.array bounds matrix
   where
-    citiesList = cities roadmap
+    -- Unique cities list and mappings
+    citiesList = cities roadmap  -- Extracts unique city names from the roadmap
+    cityIndexPairs = cityToIndex citiesList  -- Maps city names to integer indices
+    indexCityPairs = indexToCity citiesList  -- Maps integers indices to city names
     nCities = length citiesList
     bounds = ((0, 0), (nCities - 1, nCities - 1))
-    matrix = [((i, j), distance roadmap (show i) (show j)) | i <- [0..(nCities - 1)], j <- [0..(nCities - 1)]]
+
+    -- Populate the adjacency matrix using integer indices
+    matrix = [((i, j), lookupDistance i j) | i <- [0..(nCities - 1)], j <- [0..(nCities - 1)]]
+
+    -- Lookup distance between cities based on their integer indices
+    lookupDistance i j = 
+      let city1 = getIndexCity indexCityPairs i
+          city2 = getIndexCity indexCityPairs j
+      in distance roadmap city1 city2
 
 ------------------------------------------------------------------------------------------------------------------------------
 
@@ -330,11 +395,14 @@ findShortestPath matrix visited index allCitiesVisit path
 travelSales :: RoadMap ->  Path
 travelSales roadmap
     | not (isStronglyConnected roadmap)  = [] 
-    | otherwise = completeTour ++ ["0"]
+    | otherwise = [getIndexCity indexCityPairs (read c) |  c <-completeTour] ++ [getIndexCity indexCityPairs 0 ] 
     where 
+        citiesList = cities roadmap
+        cityIndexPairs = cityToIndex citiesList
+        indexCityPairs = indexToCity citiesList
         matrix = tspMatrix roadmap
         visitedMask = visitCity (1 `Data.Bits.shiftL` 0) 0
-        totalCities = length (cities roadmap)
+        totalCities = length citiesList
         visited = allCitiesVisited totalCities
         completeTour =  snd (findShortestPath matrix visitedMask 0 visited []) 
 
@@ -352,15 +420,4 @@ gTest2 = [("0","1",10),("0","2",15),("0","3",20),("1","2",35),("1","3",25),("2",
 
 gTest3 :: RoadMap -- unconnected graph
 gTest3 = [("0","1",4),("2","3",2)]
-
-gTest4 :: RoadMap -- bipartite graph, good for checking shortestPath from 0 to 4
-gTest4 = [("0","1",1),("0","2",1),("0","3",1),("1","4",1),("2","4",1),("3","4",1)]
-
-gTest5 :: RoadMap -- bigass graph
-gTest5 = [("0", "34", 11), ("24", "35", 7), ("35", "6", 11), ("3", "49", 16), ("13", "40", 19), ("19", "32", 23), ("34", "7", 6), ("14", "23", 14), ("47", "6", 23), ("3", "43", 22), ("10", "46", 2), ("20", "35", 20), ("11", "47", 24), ("0", "35", 14), ("0", "47", 13), ("14", "36", 9), ("19", "3", 1), ("6", "43", 24), ("3", "34", 22), ("43", "17", 3), ("13", "17", 14), ("19", "35", 12), ("3", "33", 22), ("10", "43", 3), ("0", "46", 7), ("47", "22", 7), ("19", "20", 2), ("16", "37", 18), ("10", "1", 5), ("12", "25", 3), ("13", "41", 11), ("10", "30", 6), ("22", "3", 17), ("11", "2", 1), ("13", "3", 20), ("33", "15", 9), ("35", "14", 25), ("3", "18", 8), ("13", "26", 7), ("38", "3", 6), ("26", "12", 22), ("20", "4", 22), ("43", "38", 10), ("17", "8", 4), ("36", "17", 16), ("2", "29", 4), ("11", "1", 16), ("3", "44", 14), ("21", "47", 1), ("25", "17", 14), ("25", "35", 13), ("18", "12", 25), ("37", "43", 14), ("37", "6", 18), ("48", "1", 12), ("7", "20", 24), ("3", "46", 1), ("10", "36", 4), ("2", "5", 8), ("30", "25", 19), ("47", "4", 2), ("47", "12", 24), ("19", "48", 17), ("26", "4", 1), ("17", "10", 5), ("46", "19", 4), ("17", "47", 17), ("8", "47", 9), ("14", "22", 10), ("13", "2", 14), ("29", "6", 6), ("43", "7", 24), ("8", "5", 25), ("48", "30", 24), ("6", "28", 16), ("18", "28", 2), ("24", "12", 1), ("20", "3", 22), ("16", "43", 4), ("29", "22", 3), ("9", "35", 14), ("25", "37", 14), ("6", "33", 7), ("7", "6", 6), ("14", "5", 3), ("8", "36", 14), ("19", "23", 4), ("22", "6", 24), ("20", "5", 10), ("7", "9", 10), ("38", "8", 14), ("4", "30", 14), ("30", "41", 16), ("1", "14", 25), ("25", "6", 22), ("48", "40", 1), ("19", "18", 25), ("21", "26", 10), ("47", "1", 18), ("20", "26", 10), ("10", "15", 24), ("1", "46", 3), ("15", "47", 17), ("40", "4", 9), ("15", "13", 1), ("47", "0", 18), ("3", "0", 1), ("11", "14", 22), ("7", "5", 8), ("21", "40", 4), ("30", "8", 10), ("4", "1", 18), ("43", "46", 23), ("22", "4", 14), ("43", "28", 23), ("26", "14", 13), ("10", "8", 1), ("23", "10", 1), ("23", "3", 19), ("21", "23", 1), ("6", "48", 25), ("47", "9", 4), ("45", "47", 25), ("45", "22", 25), ("46", "25", 3), ("10", "13", 18), ("44", "1", 2), ("30", "26", 25), ("6", "32", 19), ("35", "25", 13), ("16", "7", 5), ("6", "46", 25), ("15", "9", 10), ("0", "32", 5), ("40", "47", 16), ("7", "46", 10), ("47", "32", 18), ("43", "36", 3), ("4", "6", 5), ("12", "7", 10), ("11", "36", 17), ("35", "12", 15), ("29", "38", 5), ("41", "3", 15), ("25", "40", 13), ("0", "41", 7), ("46", "9", 5), ("43", "41", 18), ("36", "29", 10), ("43", "32", 8), ("8", "0", 23), ("24", "45", 23), ("48", "47", 23), ("0", "31", 14), ("24", "41", 15), ("22", "9", 16), ("1", "19", 4), ("17", "45", 18), ("29", "17", 13), ("37", "38", 9), ("37", "41", 2), ("43", "3", 8), ("35", "11", 17), ("6", "27", 22), ("13", "36", 6), ("23", "2", 18), ("48", "24", 16), ("48", "3", 10)]
-
-gTest6 :: RoadMap -- bigass graph, kinda bad
-gTest6 = concat (replicate 10000 gTest1)
-
-
 

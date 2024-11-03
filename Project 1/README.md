@@ -15,7 +15,7 @@ In this README file, we will also provide a walkthrough of the `shortestPath` an
 
 - This function calculates all possible shortest paths between two cities in a roadmap. It utilizes the Breadth-First Search (BFS) approach to efficiently explore and identify paths with the minimum distance, avoiding cycles.
 
-- The overall time complexity is approximately **O(V + E)**, where V is the number of cities and E the number of roads. By processing paths layer-by-layer, BFS finds all paths with the shortest distance before considering longer paths.
+- The overall time complexity is approximately **O(V * b^V)**, where V represents the number of cities, and b denotes the branching factor, which accounts for the exponential growth in paths. This complexity arises from the BFS approach, which explores all possible paths while tracking visited cities and calculating cumulative distances to find the optimal route.
 
 ### Auxiliary Data Structures
 
@@ -26,19 +26,19 @@ In this README file, we will also provide a walkthrough of the `shortestPath` an
 
 1. **BFS Helper Function** (`bfs`)
 
-    Core recursive function to perform **BFS** for finding all shortest paths from `start` to `finish`.Core recursive function to perform BFS for finding all shortest paths from start to finish.
+    Core recursive function to perform **BFS** for finding all shortest paths from `start` to `finish`.
 
     - When `queue` is empty, it returns `paths`, representing all unique paths that reach `finish` with the shortest possible distance.
     - If the path’s last city (`current`) matches `finish`, `bfs` evaluates whether it’s the shortest path found:
         - If no shortest path has been set (`minDist = Nothing`), it adds this path and sets `minDist` to the current distance.
         - If a minimum distance exists (`minDist = Just m`) and matches the current path’s distance, it adds the path to `paths`.
-    - When `current` isn’t `finish`, bfs extends the path by exploring neighboring cities not yet visited in the path, creating new potential paths to add to `queue` for further exploration.
+    - Otherwise, `bfs` extends the path by exploring neighboring cities not yet visited in the path, creating new potential paths to add to `queue` for further exploration.
 
     **Justification**: BFS ensures each shortest path is found before exploring longer paths. By checking minDist at each match, it efficiently returns all minimal paths without extra computations.
 
 2. **Auxiliary Adjacent Function** (`adjacent`)
 
-    A helper that retrieves neighboring cities and their distances from the roadmap for a given city.
+    Function that we used as helper to retrieve neighboring cities and their distances from the roadmap for a given city.
 
 3. **Shortest Path(s) Main Function** (`shortestPath`)
 
@@ -69,15 +69,14 @@ In this README file, we will also provide a walkthrough of the `shortestPath` an
 
     Converts the roadmap to an adjacency matrix for efficient distance lookups.
     Each cell (i, j) holds the distance between cities i and j, and the matrix bounds are set based on the number of cities.
-    Example matrix layout for gTest4.
+    Example matrix layout for gTest2.
 
-    |    |   0    |    1    |    2    |    3    |    4    |
-    |----|--------|---------|---------|---------|---------|
-    |  0 | Just 0 | Just 1  | Just 1  | Just 1  | Nothing |
-    |  1 | Just 1 | Just 0  | Nothing | Nothing | Just 1  |
-    |  2 | Just 1 | Nothing | Just 0  | Nothing | Just 1  |
-    |  3 | Just 1 | Nothing | Nothing | Just 0  | Just 1  |
-    |  4 | Nothing| Just 1  | Just 1  | Just 1  | Just 0  |
+    |    | 0  | 1  | 2  | 3  | 
+    |----|----|----|----|----|
+    |  0 |  0 | 10 | 15 | 20 |
+    |  1 | 10 |  0 | 35 | 25 |
+    |  2 | 15 | 35 |  0 | 30 |
+    |  3 | 20 | 25 | 30 |  0 |
 
 
 2. **Bit Masking for Tracking Visited Cities**
