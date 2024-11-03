@@ -223,7 +223,63 @@ shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start finish
     | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself.
     | otherwise = bfs roadmap start finish [([start], 0)] [] Nothing
-  
+ 
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Maps each city to its corresponding index, creating a list of tuples where each tuple contains
+-- a city and its index.
+--
+-- Parameters:
+--   cities - A list of city names.
+--
+-- Returns:
+--   A list of tuples where each tuple consists of a city and its corresponding index.
+
+cityToIndex :: [City] -> [(City, Int)]
+cityToIndex cities = zip cities [0..]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Maps each index to its corresponding city, creating a list of tuples where each tuple contains
+-- an index and its corresponding city.
+--
+-- Parameters:
+--   cities - A list of city names.
+--
+-- Returns:
+--   A list of tuples where each tuple consists of an index and its corresponding city.
+
+indexToCity :: [City] -> [(Int, City)]
+indexToCity cities = zip [0..] cities
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Retrieves the city corresponding to a given index from a list of (index, city) pairs.
+--
+-- Parameters:
+--   indexCityPairs - A list of tuples where each tuple contains an index and its corresponding city.
+--   index - The index of the city to retrieve.
+--
+-- Returns:
+--   The city that corresponds to the provided index.
+
+getIndexCity :: [(Int, City)] -> Int -> City
+getIndexCity indexCityPairs index = head [c | (i, c) <- indexCityPairs, i == index]
+
+------------------------------------------------------------------------------------------------------------------------------
+
+-- Retrieves the index corresponding to a given city from a list of (city, index) pairs.
+--
+-- Parameters:
+--   cityIndexPairs - A list of tuples where each tuple contains a city and its corresponding index.
+--   city - The city whose index is to be retrieved.
+--
+-- Returns:
+--   The index that corresponds to the provided city.
+
+getCityIndex :: [(City, Int)] -> City -> Int
+getCityIndex cityIndexPairs city = head [i | (c, i) <- cityIndexPairs, c == city]
+
 ------------------------------------------------------------------------------------------------------------------------------
 
 -- Constructs an adjacency matrix for the Traveling Salesman Problem (TSP) representation.
@@ -238,10 +294,21 @@ shortestPath roadmap start finish
 tspMatrix :: RoadMap -> AdjMatrix
 tspMatrix roadmap = Data.Array.array bounds matrix
   where
-    citiesList = cities roadmap
+    -- Unique cities list and mappings
+    citiesList = cities roadmap  -- Extracts unique city names from the roadmap
+    cityIndexPairs = cityToIndex citiesList  -- Maps city names to integer indices
+    indexCityPairs = indexToCity citiesList  -- Maps integers indices to city names
     nCities = length citiesList
     bounds = ((0, 0), (nCities - 1, nCities - 1))
-    matrix = [((i, j), distance roadmap (show i) (show j)) | i <- [0..(nCities - 1)], j <- [0..(nCities - 1)]]
+
+    -- Populate the adjacency matrix using integer indices
+    matrix = [((i, j), lookupDistance i j) | i <- [0..(nCities - 1)], j <- [0..(nCities - 1)]]
+
+    -- Lookup distance between cities based on their integer indices
+    lookupDistance i j = 
+      let city1 = getIndexCity indexCityPairs i
+          city2 = getIndexCity indexCityPairs j
+      in distance roadmap city1 city2
 
 ------------------------------------------------------------------------------------------------------------------------------
 
@@ -305,7 +372,7 @@ findShortestPath matrix visited index allCitiesVisit path
             Nothing ->  (100000000, []) 
     | otherwise = 
         let ((_, _), (maxCity, _)) = Data.Array.bounds matrix
-            distancePaths = [(dist + newDist, newCityPath) | nextCity <- [0..maxCity], not (isVisited visited nextCity),
+            distancePaths = [ (dist + newDist, newCityPath) | nextCity <- [0..maxCity], not (isVisited visited nextCity),
                           let dist = case matrix Data.Array.! (index, nextCity) of
                                         Just d -> d
                                         Nothing -> infinite, 
@@ -326,14 +393,17 @@ findShortestPath matrix visited index allCitiesVisit path
 
 travelSales :: RoadMap ->  Path
 travelSales roadmap
-    | not (isStronglyConnected roadmap) = [] 
-    | otherwise = completeTour ++ ["0"]
+    | not (isStronglyConnected roadmap)  = [] 
+    | otherwise = [getIndexCity indexCityPairs (read c) |  c <-completeTour] ++ [getIndexCity indexCityPairs 0 ] 
     where 
+        citiesList = cities roadmap
+        cityIndexPairs = cityToIndex citiesList
+        indexCityPairs = indexToCity citiesList
         matrix = tspMatrix roadmap
         visitedMask = visitCity (1 `Data.Bits.shiftL` 0) 0
-        nCities = length (cities roadmap)
-        visited = allCitiesVisited nCities
-        completeTour = snd (findShortestPath matrix visitedMask 0 visited []) 
+        totalCities = length citiesList
+        visited = allCitiesVisited totalCities
+        completeTour =  snd (findShortestPath matrix visitedMask 0 visited []) 
 
 ------------------------------------------------------------------------------------------------------------------------------
     
@@ -349,3 +419,4 @@ gTest2 = [("0","1",10),("0","2",15),("0","3",20),("1","2",35),("1","3",25),("2",
 
 gTest3 :: RoadMap -- unconnected graph
 gTest3 = [("0","1",4),("2","3",2)]
+
