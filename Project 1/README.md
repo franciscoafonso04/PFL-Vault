@@ -56,6 +56,8 @@ In this README file, we will also provide a walkthrough of the `shortestPath` an
 
 - The solution consists of several helper functions and a main function (travelSales) that orchestrates the TSP calculation. Each function has a specific role in building the adjacency matrix, managing the bitwise mask for visited cities, and computing the minimum distance path using recursion. Here's a detailed breakdown:
 
+- NOTE: In addition to the primary functionality of solving the Traveling Salesman Problem (TSP), we have developed several auxiliary functions to facilitate the handling of city names and their corresponding indices. These functions are particularly useful for cases where city names are not limited to numerical representations (`cityToIndex`, `indexToCity`, `getIndexCity`, `getCityIndex`).
+
 ### Auxiliary Data Structures
 
 - **Adjacency Matrix**: Enables O(1) access to distances between cities for frequent distance lookups between pairs of cities.
