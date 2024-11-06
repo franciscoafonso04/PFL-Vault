@@ -10,13 +10,14 @@ type City = String
 type Path = [City]
 type Distance = Int
 type RoadMap = [(City,City,Distance)]
+
 type AdjMatrix = Data.Array.Array (Int,Int) (Maybe Distance)
-type Visited = Integer
+type Visited = Int
 
 infinite :: Distance
 infinite = 100000000
 
------------------------------------------------------------------------------------------------------------------------------  
+-----------------------------------------------------------------------------------------------------------------------------
 
 -- Extracts unique cities from a RoadMap, a list of (city1, city2, distance) tuples, representing roads between cities.
 --
@@ -134,7 +135,7 @@ rome roadmap =
 --   roadmap - A list of tuples, where each tuple represents a road connecting two cities and its distance.
 --
 -- Returns: A list of tuples, where each tuple contains a city and a list of cities directly connected to it.
---          providing an adjacency list representation of the roadmap.  
+--          providing an adjacency list representation of the roadmap.
 
 getAdjacencyList :: RoadMap -> [(City, [City])]
 getAdjacencyList roadmap = [(city1, [cities | (cities,_) <- adjacent roadmap city1 ]) | city1 <- cities roadmap]
@@ -193,17 +194,17 @@ isStronglyConnected roadmap =
 bfs :: RoadMap -> City -> City -> [(Path, Distance)] -> [Path] -> Maybe Distance -> [Path]
 bfs r s f [] paths _ = Data.List.nub paths  -- Return all found shortest paths when the queue is empty.
 bfs r s f ((path, dist):queue) paths minDist
-    | current == f = -- When we reach the finish city, check if this path is among the shortest.
+    | current == f =  -- When we reach the finish city, check if this path is among the shortest.
         case minDist of
             Nothing -> bfs r s f queue (path : paths) (Just dist)  -- First path to finish sets minDist.
-            Just m  -> if dist == m
+            Just m -> if dist == m
                         then bfs r s f queue (path : paths) (Just m)  -- Add path if it matches the min distance.
                         else bfs r s f queue paths (Just m)  -- Ignore if distance equals min distance.
-    | otherwise = bfs r s f(queue ++ validNextPaths) paths minDist  -- Continue exploring other paths.
+    | otherwise = bfs r s f (queue ++ validNextPaths) paths minDist  -- Continue exploring other paths.
     where
 
     current = last path  -- Current city is the last city in the path.
-    validNextPaths = [(path ++ [nextCity], dist + nextDist) | -- Generate valid next paths by adding neighboring cities  
+    validNextPaths = [(path ++ [nextCity], dist + nextDist) |  -- Generate valid next paths by adding neighboring cities  
                                                                 -- that are not already visited in the current path.
                         (nextCity, nextDist) <- adjacent r current,
                         nextCity `notElem` path]  -- Avoid cycles by ensuring nextCity is not already in path.
@@ -223,62 +224,6 @@ shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath roadmap start finish
     | start == finish = [[start]]  -- If start == finish, the shortest path is the city itself.
     | otherwise = bfs roadmap start finish [([start], 0)] [] Nothing
- 
-------------------------------------------------------------------------------------------------------------------------------
-
--- Maps each city to its corresponding index, creating a list of tuples where each tuple contains
--- a city and its index.
---
--- Parameters:
---   cities - A list of city names.
---
--- Returns:
---   A list of tuples where each tuple consists of a city and its corresponding index.
-
-cityToIndex :: [City] -> [(City, Int)]
-cityToIndex cities = zip cities [0..]
-
-------------------------------------------------------------------------------------------------------------------------------
-
--- Maps each index to its corresponding city, creating a list of tuples where each tuple contains
--- an index and its corresponding city.
---
--- Parameters:
---   cities - A list of city names.
---
--- Returns:
---   A list of tuples where each tuple consists of an index and its corresponding city.
-
-indexToCity :: [City] -> [(Int, City)]
-indexToCity cities = zip [0..] cities
-
-------------------------------------------------------------------------------------------------------------------------------
-
--- Retrieves the city corresponding to a given index from a list of (index, city) pairs.
---
--- Parameters:
---   indexCityPairs - A list of tuples where each tuple contains an index and its corresponding city.
---   index - The index of the city to retrieve.
---
--- Returns:
---   The city that corresponds to the provided index.
-
-getIndexCity :: [(Int, City)] -> Int -> City
-getIndexCity indexCityPairs index = head [c | (i, c) <- indexCityPairs, i == index]
-
-------------------------------------------------------------------------------------------------------------------------------
-
--- Retrieves the index corresponding to a given city from a list of (city, index) pairs.
---
--- Parameters:
---   cityIndexPairs - A list of tuples where each tuple contains a city and its corresponding index.
---   city - The city whose index is to be retrieved.
---
--- Returns:
---   The index that corresponds to the provided city.
-
-getCityIndex :: [(City, Int)] -> City -> Int
-getCityIndex cityIndexPairs city = head [i | (c, i) <- cityIndexPairs, c == city]
 
 ------------------------------------------------------------------------------------------------------------------------------
 
@@ -296,8 +241,6 @@ tspMatrix roadmap = Data.Array.array bounds matrix
   where
     -- Unique cities list and mappings
     citiesList = cities roadmap  -- Extracts unique city names from the roadmap
-    cityIndexPairs = cityToIndex citiesList  -- Maps city names to integer indices
-    indexCityPairs = indexToCity citiesList  -- Maps integers indices to city names
     nCities = length citiesList
     bounds = ((0, 0), (nCities - 1, nCities - 1))
 
@@ -305,10 +248,7 @@ tspMatrix roadmap = Data.Array.array bounds matrix
     matrix = [((i, j), lookupDistance i j) | i <- [0..(nCities - 1)], j <- [0..(nCities - 1)]]
 
     -- Lookup distance between cities based on their integer indices
-    lookupDistance i j = 
-      let city1 = getIndexCity indexCityPairs i
-          city2 = getIndexCity indexCityPairs j
-      in distance roadmap city1 city2
+    lookupDistance i j = distance roadmap (citiesList !! i) (citiesList !! j)
 
 ------------------------------------------------------------------------------------------------------------------------------
 
@@ -366,19 +306,19 @@ visitCity bit cityIndex = bit Data.Bits..|. (1 `Data.Bits.shiftL` cityIndex)
 
 findShortestPath :: AdjMatrix -> Visited -> Int -> Visited -> Path -> (Distance, Path)
 findShortestPath matrix visited index allCitiesVisit path
-    | visited == allCitiesVisit = 
-        case matrix Data.Array.! (index, 0) of 
-            Just dist -> (dist, reverse (show index : path)) 
-            Nothing ->  (100000000, []) 
-    | otherwise = 
+    | visited == allCitiesVisit =
+        case matrix Data.Array.! (index, 0) of
+            Just dist -> (dist, reverse (show index : path))
+            Nothing -> (100000000, [])
+    | otherwise =
         let ((_, _), (maxCity, _)) = Data.Array.bounds matrix
-            distancePaths = [ (dist + newDist, newCityPath) | nextCity <- [0..maxCity], not (isVisited visited nextCity),
+            distancePaths = [(dist + newDist, newCityPath) | nextCity <- [0..maxCity], not (isVisited visited nextCity),
                           let dist = case matrix Data.Array.! (index, nextCity) of
                                         Just d -> d
-                                        Nothing -> infinite, 
-                          let (newDist, newCityPath) = findShortestPath matrix (visitCity visited nextCity) nextCity allCitiesVisit (show index : path)] 
+                                        Nothing -> infinite,
+                          let (newDist, newCityPath) = findShortestPath matrix (visitCity visited nextCity) nextCity allCitiesVisit (show index : path)]
             (minDist, minPath) = minimum distancePaths
-        in  (minDist, minPath) 
+        in  (minDist, minPath)
 
 ------------------------------------------------------------------------------------------------------------------------------
 
@@ -391,22 +331,19 @@ findShortestPath matrix visited index allCitiesVisit path
 --   A path representing the shortest tour that visits all cities and returns to the starting city.
 --   If the roadmap is not strongly connected, returns an empty list.
 
-travelSales :: RoadMap ->  Path
+travelSales :: RoadMap -> Path
 travelSales roadmap
-    | not (isStronglyConnected roadmap)  = [] 
-    | otherwise = [getIndexCity indexCityPairs (read c) |  c <-completeTour] ++ [getIndexCity indexCityPairs 0 ] 
-    where 
+    | not (isStronglyConnected roadmap) = []
+    | otherwise = [citiesList !! read c | c <-completeTour] ++ [head citiesList]
+    where
         citiesList = cities roadmap
-        cityIndexPairs = cityToIndex citiesList
-        indexCityPairs = indexToCity citiesList
         matrix = tspMatrix roadmap
         visitedMask = visitCity (1 `Data.Bits.shiftL` 0) 0
-        totalCities = length citiesList
-        visited = allCitiesVisited totalCities
-        completeTour =  snd (findShortestPath matrix visitedMask 0 visited []) 
+        visited = allCitiesVisited (length (cities roadmap))
+        completeTour = snd (findShortestPath matrix visitedMask 0 visited [])
 
 ------------------------------------------------------------------------------------------------------------------------------
-    
+
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
 
@@ -419,4 +356,7 @@ gTest2 = [("0","1",10),("0","2",15),("0","3",20),("1","2",35),("1","3",25),("2",
 
 gTest3 :: RoadMap -- unconnected graph
 gTest3 = [("0","1",4),("2","3",2)]
+
+gTest4 :: RoadMap
+gTest4 = [("zero","um",10),("zero","dois",15),("zero","tres",20),("um","dois",35),("um","tres",25),("dois","tres",30)]
 
