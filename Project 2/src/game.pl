@@ -1,4 +1,5 @@
-:- ensure_loaded('utilities.pl'). % Exemplo: Crie um ficheiro utilities.pl para funções auxiliares
+:- use_module('utilities.pl').
+:- use_module(library(lists)).
 
 play :- display_main_menu.
 
@@ -28,10 +29,12 @@ handle_menu_option(_) :-
 % Sets up the game configuration and starts the initial state
 setup_game(Player1Type, Player2Type) :-
     write('Setting up the game...'), nl,
-    % Define initial configurations (e.g., board size)
-    GameConfig = [player1:Player1Type, player2:Player2Type, board_size:5], % Exemplo de configuração inicial
+    GameConfig = [player1:Player1Type, player2:Player2Type, board_size:5],
     initial_state(GameConfig, GameState),
+    write('Initial GameState: '), write(GameState), nl, % Debugging
     game_loop(GameState).
+
+current_player(game_state(_, Player), Player).
 
 % Initializes the game state
 initial_state(GameConfig, GameState) :-
@@ -97,3 +100,43 @@ move(GameState, Move, NewGameState) :-
 % Announces the winner
 announce_winner(Winner) :-
     write('Game over! Winner: '), write(Winner), nl.
+
+% -----------
+
+% valid_moves(+GameState, -ListOfMoves)
+valid_moves(game_state(Board, Player), Moves) :-
+    findall(move(Row, Col, Dir),
+        (valid_direction(Dir), valid_move(Board, Player, Row, Col, Dir)),
+        Moves).
+
+% valid_move(+Board, +Player, +Row, +Col, +Direction)
+valid_move(Board, Player, Row, Col, Dir) :-
+    nth1(Row, Board, RowData),
+    nth1(Col, RowData, Piece),
+    write('Testing Row: '), write(Row), write(' Col: '), write(Col), write(' Piece: '), write(Piece), nl,
+    Piece = Player, % Ensure this is the player's piece
+    capture_possible(Board, Row, Col, Dir).
+
+% capture_possible(+Board, +Row, +Col, -Direction)
+capture_possible(Board, Row, Col, Direction) :-
+    valid_direction(Direction),
+    next_position(Row, Col, Direction, R1, C1),
+    write('Checking Direction: '), write(Direction), 
+    write(' Target Row: '), write(R1), write(' Target Col: '), write(C1), nl,
+    within_bounds(Board, R1, C1),           % Ensure (R1, C1) is within bounds
+    nth1(R1, Board, NextRow),
+    nth1(C1, NextRow, Opponent),           % Get the target piece
+    Opponent \= empty, Opponent \= Player. % Ensure it's an opponent's piece
+
+
+test_valid_moves :-
+    InitialBoard = [
+    [white, empty, empty, empty, empty],
+    [empty, empty, empty, empty, empty],
+    [black, empty, empty, empty, empty],
+    [empty, empty, empty, empty, empty],
+    [empty, empty, empty, empty, empty]
+    ],
+    GameState = game_state(InitialBoard, black),
+    valid_moves(GameState, Moves),
+    write(Moves), nl.
