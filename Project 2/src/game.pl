@@ -13,7 +13,13 @@ display_main_menu :-
     write('4. Exit'), nl,
     write('Choose an option: '),
     read(Option),
-    handle_menu_option(Option).
+    (
+        member(Option, [1, 2, 3, 4]) -> handle_menu_option(Option)
+    ;
+        write('Invalid option. Please try again.'), nl,
+        display_main_menu
+    ).
+
 
 % Handle user input for the menu
 handle_menu_option(1) :-
@@ -35,7 +41,6 @@ setup_game(Player1Type, Player2Type) :-
     write('Setting up the game...'), nl,
     GameConfig = [player1:Player1Type, player2:Player2Type, board_size:5],
     initial_state(GameConfig, GameState),
-    write('Initial GameState: '), write(GameState), nl, % Debugging
     game_loop(GameState).
 
 % Gets current player
@@ -54,9 +59,7 @@ create_test_board(_Size, Board) :-
         [black, empty, empty, empty, empty],
         [empty, empty, empty, empty, empty],
         [empty, empty, white, empty, empty]
-    ],
-    write('Initialized Board:'), nl,
-    display_board(Board).
+    ].
 
 % Main game loop
 game_loop(GameState) :-
@@ -64,13 +67,20 @@ game_loop(GameState) :-
     valid_moves(GameState, Moves),
     write('Valid Moves: '), write(Moves), nl,
     (
-        Moves = [] ->
-        (write('No valid moves! Game over.'), nl, !)
+        Moves = [] -> % No valid moves
+        (write('No valid moves! Game over.'), nl, !) % End the game
     ;
         current_player(GameState, Player),
-        get_next_move(Player, GameState, Move),
-        move(GameState, Move, NewGameState),
-        game_loop(NewGameState)
+        repeat, % Allows retrying in case of invalid input
+        (
+            get_next_move(Player, GameState, Move), % Get the next move
+            (   member(Move, Moves) -> % Check if the move is valid
+                move(GameState, Move, NewGameState), % Execute the move
+                game_loop(NewGameState) % Proceed to the next state
+            ;
+                write('Invalid move. Try again.'), nl, fail % Retry input
+            )
+        )
     ).
 
 % Displays the game board and other information
@@ -132,23 +142,33 @@ valid_move(Board, Player, Row, Col, Dir) :-
     player_piece(Player, Piece), % Map the current player to their piece
     nth1(Row, Board, RowData),
     nth1(Col, RowData, Cell),
-    write('Testing Row: '), write(Row), write(' Col: '), write(Col), write(' Cell: '), write(Cell), nl,
     Cell = Piece, % Ensure this cell belongs to the player
     capture_possible(Board, Row, Col, Dir). % Check if a capture is possible in the given direction
 
 % capture_possible(+Board, +Row, +Col, -Direction)
 capture_possible(Board, Row, Col, Direction) :-
-    valid_direction(Direction),
-    next_position(Row, Col, Direction, R1, C1), % Calculate the target position
-    write('Checking Direction: '), write(Direction),
-    write(' Target Row: '), write(R1), write(' Target Col: '), write(C1), nl,
-    within_bounds(Board, R1, C1), % Ensure the target position is within bounds
-    nth1(R1, Board, TargetRow), % Access the correct row using 1-based indexing
-    nth1(C1, TargetRow, TargetCell), % Access the correct cell in the row
-    write('Accessed Target Cell: '), write(TargetCell), nl,
-    TargetCell \= empty, % Ensure the target cell is not empty
-    player_piece(player2, OpponentPiece), % Check if it’s the opponent’s piece
+    step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol),
+    nth1(TargetRow, Board, TargetRowData),
+    nth1(TargetCol, TargetRowData, TargetCell),
+    player_piece(player2, OpponentPiece),
     TargetCell = OpponentPiece.
+
+
+step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
+    next_position(Row, Col, Direction, NextRow, NextCol),
+    within_bounds(Board, NextRow, NextCol),
+    nth1(NextRow, Board, NextRowData),
+    nth1(NextCol, NextRowData, NextCell),
+    (
+        NextCell = empty ->
+        step_towards_capture(Board, NextRow, NextCol, Direction, TargetRow, TargetCol) % Continue stepping
+    ;
+        TargetRow = NextRow,
+        TargetCol = NextCol,
+        NextCell \= empty
+    ).
+
+
 
 
 
