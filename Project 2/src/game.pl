@@ -3,6 +3,8 @@
 
 play :- display_main_menu.
 
+%------------------------------------------------------------------------------------------------------------
+
 display_main_menu :-
     write('Welcome to Collapse!'), nl,
     write('1. Human vs Human'), nl,
@@ -26,6 +28,8 @@ handle_menu_option(_) :-
     write('Invalid option. Please try again.'), nl,
     display_main_menu.
 
+%------------------------------------------------------------------------------------------------------------
+
 % Sets up the game configuration and starts the initial state
 setup_game(Player1Type, Player2Type) :-
     write('Setting up the game...'), nl,
@@ -34,30 +38,34 @@ setup_game(Player1Type, Player2Type) :-
     write('Initial GameState: '), write(GameState), nl, % Debugging
     game_loop(GameState).
 
+% Gets current player
 current_player(game_state(_, Player), Player).
 
 % Initializes the game state
-initial_state(GameConfig, GameState) :-
-    % Extract configurations
+initial_state(GameConfig, game_state(Board, player1)) :-
     member(board_size:BoardSize, GameConfig),
-    % Create an empty board
-    create_empty_board(BoardSize, Board),
-    % Define the starting player
-    GameState = game_state(Board, player1). % game_state(Board, CurrentPlayer)
+    create_test_board(BoardSize, Board).
 
-% Creates an empty board of the given size
-create_empty_board(Size, Board) :-
-    length(Row, Size),
-    maplist(=(empty), Row), % Fills each row with 'empty' cells
-    length(Board, Size),
-    maplist(=(Row), Board).
+% Creates a test board with initial pieces
+create_test_board(_Size, Board) :-
+    Board = [
+        [empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty],
+        [black, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty],
+        [empty, empty, white, empty, empty]
+    ],
+    write('Initialized Board:'), nl,
+    display_board(Board).
 
 % Main game loop
 game_loop(GameState) :-
     display_game(GameState),
+    valid_moves(GameState, Moves),
+    write('Valid Moves: '), write(Moves), nl,
     (
-        game_over(GameState, Winner) ->
-        announce_winner(Winner)
+        Moves = [] ->
+        (write('No valid moves! Game over.'), nl, !)
     ;
         current_player(GameState, Player),
         get_next_move(Player, GameState, Move),
@@ -79,12 +87,11 @@ display_row(Row) :-
     write(Row), nl.
 
 % Determines if the game is over and identifies the winner
-game_over(GameState, Winner) :-
-    % Implement game-specific logic here
+game_over(game_state(_, _), _) :-
     fail. % Placeholder: replace with actual game-over logic
 
 % Gets the next move for the current player
-get_next_move(human, GameState, Move) :-
+get_next_move(human, _, Move) :-
     write('Enter your move: '),
     read(Move). % Placeholder: validate input
 
@@ -92,51 +99,57 @@ get_next_move(computer, GameState, Move) :-
     choose_move(GameState, 1, Move). % Example: using level 1 AI
 
 % Executes a move and updates the game state
-move(GameState, Move, NewGameState) :-
-    % Implement move validation and execution
-    write('Executing move...'), nl, % Placeholder
-    NewGameState = GameState. % Placeholder: update state accordingly
+move(game_state(Board, Player), move(Row, Col, Dir), game_state(NewBoard, NextPlayer)) :-
+    % Placeholder: implement actual move execution logic
+    write('Executing move: '), write(move(Row, Col, Dir)), nl,
+    NewBoard = Board, % For now, just copy the board
+    switch_player(Player, NextPlayer).
+
+% Switches the player
+switch_player(player1, player2).
+switch_player(player2, player1).
+
+% Player Piece Colors
+player_piece(player1, black).
+player_piece(player2, white).
 
 % Announces the winner
 announce_winner(Winner) :-
     write('Game over! Winner: '), write(Winner), nl.
 
-% -----------
+%------------------------------------------------------------------------------------------------------------
 
 % valid_moves(+GameState, -ListOfMoves)
 valid_moves(game_state(Board, Player), Moves) :-
+    write('Checking valid moves for Player: '), write(Player), nl,
     findall(move(Row, Col, Dir),
         (valid_direction(Dir), valid_move(Board, Player, Row, Col, Dir)),
-        Moves).
+        Moves),
+    write('Calculated Moves: '), write(Moves), nl.
 
 % valid_move(+Board, +Player, +Row, +Col, +Direction)
 valid_move(Board, Player, Row, Col, Dir) :-
+    player_piece(Player, Piece), % Map the current player to their piece
     nth1(Row, Board, RowData),
-    nth1(Col, RowData, Piece),
-    write('Testing Row: '), write(Row), write(' Col: '), write(Col), write(' Piece: '), write(Piece), nl,
-    Piece = Player, % Ensure this is the player's piece
-    capture_possible(Board, Row, Col, Dir).
+    nth1(Col, RowData, Cell),
+    write('Testing Row: '), write(Row), write(' Col: '), write(Col), write(' Cell: '), write(Cell), nl,
+    Cell = Piece, % Ensure this cell belongs to the player
+    capture_possible(Board, Row, Col, Dir). % Check if a capture is possible in the given direction
 
 % capture_possible(+Board, +Row, +Col, -Direction)
 capture_possible(Board, Row, Col, Direction) :-
     valid_direction(Direction),
-    next_position(Row, Col, Direction, R1, C1),
-    write('Checking Direction: '), write(Direction), 
+    next_position(Row, Col, Direction, R1, C1), % Calculate the target position
+    write('Checking Direction: '), write(Direction),
     write(' Target Row: '), write(R1), write(' Target Col: '), write(C1), nl,
-    within_bounds(Board, R1, C1),           % Ensure (R1, C1) is within bounds
-    nth1(R1, Board, NextRow),
-    nth1(C1, NextRow, Opponent),           % Get the target piece
-    Opponent \= empty, Opponent \= Player. % Ensure it's an opponent's piece
+    within_bounds(Board, R1, C1), % Ensure the target position is within bounds
+    nth1(R1, Board, TargetRow), % Access the correct row using 1-based indexing
+    nth1(C1, TargetRow, TargetCell), % Access the correct cell in the row
+    write('Accessed Target Cell: '), write(TargetCell), nl,
+    TargetCell \= empty, % Ensure the target cell is not empty
+    player_piece(player2, OpponentPiece), % Check if it’s the opponent’s piece
+    TargetCell = OpponentPiece.
 
 
-test_valid_moves :-
-    InitialBoard = [
-    [white, empty, empty, empty, empty],
-    [empty, empty, empty, empty, empty],
-    [black, empty, empty, empty, empty],
-    [empty, empty, empty, empty, empty],
-    [empty, empty, empty, empty, empty]
-    ],
-    GameState = game_state(InitialBoard, black),
-    valid_moves(GameState, Moves),
-    write(Moves), nl.
+
+
