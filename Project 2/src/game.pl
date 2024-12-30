@@ -36,12 +36,36 @@ handle_menu_option(_) :-
     write('Invalid option. Please try again.'), nl,
     display_main_menu.
 
-% Displays the board
+% Displays the board with column and row labels
 display_board(Board) :-
-    maplist(display_row, Board).
+    % Print column headers
+    write('    '),
+    print_columns,
+    nl,
+    % Print board rows with row numbers
+    print_rows(Board, 1).
 
-display_row(Row) :-
-    write(Row), nl.
+% Prints column numbers
+print_columns :- 
+    forall(between(1, 9, Col), (write(Col), write(' '))).
+
+% Prints each row of the board, preceded by row number
+print_rows([], _).
+print_rows([Row | Rest], RowNum) :- 
+    % Print row number
+    write(RowNum), write(' | '),
+    print_row(Row),
+    write('|'), nl,
+    NextRowNum is RowNum + 1,
+    print_rows(Rest, NextRowNum).
+
+% Prints a single row with space between elements
+print_row([]).
+print_row([Cell | Rest]) :- 
+    (Cell == black -> write('\033[34mB \033[0m')  % Blue for black
+    ; Cell == white -> write('\033[32mW \033[0m')  % Green for white
+    ; write('\033[35mE \033[0m')),         % Orange for empty
+    print_row(Rest).
 
 %------------------------------------------------------------------------------------------------------------
 
@@ -82,19 +106,21 @@ game_loop(GameState) :-
         game_loop(NewGameState)
     ).
 
-get_valid_move(human, Moves, Move) :-
+get_valid_move(_, Moves, Move) :-
     repeat,
     write('Enter your move as move(Row, Col, Direction): '),
     read(Input),
     (
+        Input = exit -> 
+        write('Exiting the game.'), nl, halt % Halts the program
+    ;
         Input = move(Row, Col, Dir),
         member(move(Row, Col, Dir), Moves) ->
         Move = Input, !
     ;
         write('Invalid move. Try again.'), nl, fail
     ).
-    
-    
+
 
 % Displays the game board and other information
 display_game(game_state(Board, Player)) :-
@@ -140,12 +166,19 @@ get_next_move(computer, GameState, Move) :-
     choose_move(GameState, 1, Move). % Example: using level 1 AI
 
 % Executes a move and updates the game state
+% move(+GameState, +Move, -NewGameState)
 move(game_state(Board, Player), move(Row, Col, Dir), game_state(NewBoard, NextPlayer)) :-
     next_position(Row, Col, Dir, NewRow, NewCol),
     within_bounds(Board, NewRow, NewCol),
     replace_cell(Board, Row, Col, empty, TempBoard), % Remove piece from original position
-    replace_cell(TempBoard, NewRow, NewCol, Player, NewBoard), % Place piece in new position
+
+    next_position(NewRow, NewCol, Dir, NextRow, NextCol),
+    replace_cell(TempBoard, NextRow, NextCol, empty, TempBoard2), % Wipe enemy from board
+    
+    player_piece(Player, Piece),
+    replace_cell(TempBoard2, NewRow, NewCol, Piece, NewBoard), % Place piece in new position
     switch_player(Player, NextPlayer).
+
 
 % Switches the player
 switch_player(player1, player2).
@@ -154,6 +187,10 @@ switch_player(player2, player1).
 % Player Piece Colors
 player_piece(player1, black).
 player_piece(player2, white).
+
+% Opponent Piece Colors
+opponent_piece(player1, white).
+opponent_piece(player2, black).
 
 count_pieces(Board, Player, Count) :-
     player_piece(Player, Piece),          % Get the piece type for the player
@@ -191,7 +228,6 @@ capture_possible(Board, Row, Col, Direction) :-
     nth1(TargetCol, TargetRowData, TargetCell),
     player_piece(player2, OpponentPiece),
     TargetCell = OpponentPiece.
-
 
 step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
     next_position(Row, Col, Direction, NextRow, NextCol),
