@@ -62,9 +62,9 @@ print_rows([Row | Rest], RowNum) :-
 % Prints a single row with space between elements
 print_row([]).
 print_row([Cell | Rest]) :- 
-    (Cell == black -> write('\033[34mB \033[0m')  % Blue for black
-    ; Cell == white -> write('\033[32mW \033[0m')  % Green for white
-    ; write('\033[35mE \033[0m')),         % Orange for empty
+    (Cell == black -> write('\033[34mX \033[0m')   % Blue for black
+    ; Cell == white -> write('\033[32mO \033[0m')  % Green for white
+    ; write('  ')),                 % Orange for empty
     print_row(Rest).
 
 %------------------------------------------------------------------------------------------------------------
@@ -129,25 +129,38 @@ display_game(game_state(Board, Player)) :-
     write('Current player: '), write(Player), nl.
 
 
-% Determines if the game is over and identifies the winner
+% Determines if the game is over and identifies the winner, should change to more declarative solution after solving more important things
 game_over(game_state(Board, _), Winner) :-
     % Check if both players have no valid moves
     valid_moves(game_state(Board, player1), Player1Moves),
     valid_moves(game_state(Board, player2), Player2Moves),
-    Player1Moves = [], Player2Moves = [], % Both players have no moves
 
-    % Count pieces for each player
-    count_pieces(Board, player1, Player1Count),
-    count_pieces(Board, player2, Player2Count),
-
-    % Determine the winner or draw
+    % Determine the winner or draw based on conditions
     (
-        Player1Count > Player2Count -> Winner = player1
+        Player1Moves = [], Player2Moves = [] -> Winner = draw
     ;
-        Player2Count > Player1Count -> Winner = player2
+        Player1Moves = [] -> Winner = player2
     ;
-        Winner = draw % Equal pieces -> draw
+        Player2Moves = [] -> Winner = player1
+    ;
+        Winner = nobody
     ).
+
+% value(+GameState, +Player, -Value)
+value(game_state(Board, _), player1, Value) :-
+    valid_moves(game_state(Board, player1), Player1Moves),
+    valid_moves(game_state(Board, player2), Player2Moves),
+    length(Player1Moves, Player1MoveCount),
+    length(Player2Moves, Player2MoveCount),
+    Value is Player1MoveCount - Player2MoveCount.
+
+% value(+GameState, +Player, -Value)
+value(game_state(Board, _), player2, Value) :-
+    valid_moves(game_state(Board, player1), Player1Moves),
+    valid_moves(game_state(Board, player2), Player2Moves),
+    length(Player1Moves, Player1MoveCount),
+    length(Player2Moves, Player2MoveCount),
+    Value is Player2MoveCount - Player1MoveCount.
 
 
 % Gets the next move for the current player
@@ -191,12 +204,6 @@ player_piece(player2, white).
 % Opponent Piece Colors
 opponent_piece(player1, white).
 opponent_piece(player2, black).
-
-count_pieces(Board, Player, Count) :-
-    player_piece(Player, Piece),          % Get the piece type for the player
-    flatten(Board, FlatBoard),            % Flatten the 2D board into a 1D list
-    include(=(Piece), FlatBoard, Pieces), % Filter out only the pieces belonging to the player
-    length(Pieces, Count).                % Count the number of pieces
 
 % Announces the winner
 announce_winner(Winner) :-
