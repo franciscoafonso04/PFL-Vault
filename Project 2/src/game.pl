@@ -96,6 +96,13 @@ initial_state(_, game_state(Board, player1)) :-
 
 
 % Main game loop
+game_loop(_, GameState) :-
+    % Check if the game is over
+    game_over(GameState, Winner),
+    Winner \= nobody,  % If there is a winner or it's a draw
+    !,  % Stop the game loop
+    announce_winner(Winner).  % Announce the result
+
 game_loop(GameConfig, GameState) :-
     display_game(GameState),
 
@@ -105,8 +112,9 @@ game_loop(GameConfig, GameState) :-
     get_next_move(PlayerType, GameState, Move),
 
     move(GameState, Move, NewGameState),
-    !, % Prevent backtracking into previous moves
-    game_loop(GameConfig, NewGameState). 
+    !,  % Prevent backtracking into previous moves
+    game_loop(GameConfig, NewGameState).  % Continue the game loop
+
 
 % Displays the game board and other information
 display_game(game_state(Board, Player)) :-
@@ -171,39 +179,31 @@ get_next_move(computer, GameState, Move) :-
 % move(+GameState, +Move, -NewGameState)
 move(game_state(Board, Player), move(Row, Col, Dir), game_state(NewBoard, NextPlayer)) :-
     valid_moves(game_state(Board, Player), Moves), % Check if move is valid
-    member(move(Row, Col, Dir), Moves),
+    member(move(Row, Col, Dir), Moves), % Ensure the move is valid
 
+    player_piece(Player, Piece), % Get the player's piece
+    capture_move(Board, Row, Col, Dir, Piece, TempBoard), % Execute the move
+
+    switch_player(Player, NextPlayer), % Switch the player
+    NewBoard = TempBoard.
+
+% capture_move(+Board, +Row, +Col, +Dir, +Piece, -NewBoard)
+capture_move(Board, Row, Col, Dir, Piece, NewBoard) :-
     next_position(Row, Col, Dir, NewRow, NewCol),
     within_bounds(Board, NewRow, NewCol),
-    replace_cell(Board, Row, Col, empty, TempBoard), % Remove piece from original position
-
-    next_position(NewRow, NewCol, Dir, NextRow, NextCol),
-    replace_cell(TempBoard, NextRow, NextCol, empty, TempBoard2), % Wipe enemy from board
+    nth1(NewRow, Board, RowData),
+    nth1(NewCol, RowData, Cell),
+    (
+        Cell = empty -> % Continue moving if the cell is empty
+        replace_cell(Board, Row, Col, empty, TempBoard), % Remove piece from current position
+        capture_move(TempBoard, NewRow, NewCol, Dir, Piece, NewBoard) % Recurse to the next position
+    ;
+        Cell \= empty, % Stop when the cell is not empty (opponent's piece)
+        replace_cell(Board, Row, Col, empty, TempBoard), % Remove piece from original position
+        replace_cell(TempBoard, NewRow, NewCol, empty, TempBoard2), % Remove the opponent's piece
+        replace_cell(TempBoard2, Row, Col, Piece, NewBoard) % Place piece in the final position
+    ).
     
-    player_piece(Player, Piece),
-    replace_cell(TempBoard2, NewRow, NewCol, Piece, NewBoard), % Place piece in new position
-    switch_player(Player, NextPlayer).
-
-
-% Switches the player
-switch_player(player1, player2).
-switch_player(player2, player1).
-
-% Player Piece Colors
-player_piece(player1, black).
-player_piece(player2, white).
-
-% Opponent Piece Colors
-opponent_piece(player1, white).
-opponent_piece(player2, black).
-
-% Player Type
-get_player_type(GameConfig, player1, Player1Type) :- member(player1:Player1Type, GameConfig).
-get_player_type(GameConfig, player2, Player2Type) :- member(player2:Player2Type, GameConfig).
-
-% Announces the winner
-announce_winner(Winner) :-
-    write('Game over! Winner: '), write(Winner), nl.
 
 %------------------------------------------------------------------------------------------------------------
 
@@ -212,7 +212,7 @@ valid_moves(game_state(Board, Player), Moves) :-
     findall(move(Row, Col, Dir),
         (valid_direction(Dir), valid_move(Board, Player, Row, Col, Dir)),
         Moves),
-    write('Valid Moves: '), write(Moves), nl.
+    write('Valid Moves for '), write(Player), write(': '), write(Moves), nl, nl.
 
 % valid_move(+Board, +Player, +Row, +Col, +Direction)
 valid_move(Board, Player, Row, Col, Dir) :-
@@ -220,16 +220,22 @@ valid_move(Board, Player, Row, Col, Dir) :-
     nth1(Row, Board, RowData),
     nth1(Col, RowData, Cell),
     Cell = Piece, % Ensure this cell belongs to the player
-    capture_possible(Board, Row, Col, Dir). % Check if a capture is possible in the given direction
+    capture_possible(Board, Player, Row, Col, Dir). % Check if a capture is possible in the given direction
 
-% capture_possible(+Board, +Row, +Col, -Direction)
-capture_possible(Board, Row, Col, Direction) :-
+% capture_possible(+Board, +Player, +Row, +Col, -Direction)
+capture_possible(Board, Player, Row, Col, Direction) :-
+    next_position(Row, Col, Direction, NextRow, NextCol),
+    within_bounds(Board, NextRow, NextCol),
+    nth1(NextRow, Board, NextRowData),
+    nth1(NextCol, NextRowData, NextCell),
+    NextCell = empty, % Ensure the first step is into an empty cell
+
     step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol),
     within_bounds(Board, TargetRow, TargetCol),
     nth1(TargetRow, Board, TargetRowData),
     nth1(TargetCol, TargetRowData, TargetCell),
-    player_piece(player2, OpponentPiece),
-    TargetCell = OpponentPiece.
+    opponent_piece(Player, Piece),
+    TargetCell = Piece.
 
 step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
     next_position(Row, Col, Direction, NextRow, NextCol),

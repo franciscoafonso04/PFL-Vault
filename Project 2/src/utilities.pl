@@ -1,4 +1,4 @@
-:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5]).
+:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, announce_winner/1]).
 :- use_module(library(lists)).
 
 % Valid directions for movement
@@ -37,3 +37,22 @@ next_position(Row, Col, southwest, NextRow, NextCol) :-
     NextRow is Row + 1,
     NextCol is Col - 1.
 
+% Switches the player
+switch_player(player1, player2).
+switch_player(player2, player1).
+
+% Player Piece Colors
+player_piece(player1, black).
+player_piece(player2, white).
+
+% Opponent Piece Colors
+opponent_piece(player1, white).
+opponent_piece(player2, black).
+
+% Player Type
+get_player_type(GameConfig, player1, Player1Type) :- member(player1:Player1Type, GameConfig).
+get_player_type(GameConfig, player2, Player2Type) :- member(player2:Player2Type, GameConfig).
+
+% Announces the winner
+announce_winner(Winner) :-
+    write('Game over! Winner: '), write(Winner), nl.
