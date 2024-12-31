@@ -1,5 +1,6 @@
 :- use_module('utilities.pl').
 :- use_module(library(lists)).
+:- use_module(library(random)).
 
 :- initialization play.
 
@@ -27,14 +28,27 @@ display_main_menu :-
 handle_menu_option(1) :-
     setup_game(human, human).
 handle_menu_option(2) :-
-    setup_game(human, computer).
+    select_difficulty(Difficulty),
+    setup_game(human, computer(Difficulty)).
 handle_menu_option(3) :-
-    setup_game(computer, computer).
+    setup_game(computer(1), computer(1)).
 handle_menu_option(4) :-
     write('Goodbye!'), nl, !.
 handle_menu_option(_) :-
     write('Invalid option. Please try again.'), nl,
     display_main_menu.
+
+% Displays a menu to select difficulty level for the AI
+select_difficulty(Difficulty) :-
+    write('Select AI Difficulty:'), nl,
+    write('1. Easy (Chico)'), nl,
+    write('2. Hard (Ramos)'), nl,
+    write('Choose an option: '),
+    read(Option),
+    (   member(Option, [1, 2]) -> Difficulty = Option
+    ;   write('Invalid option. Please try again.'), nl,
+        select_difficulty(Difficulty)
+    ).
 
 % Displays the board with column and row labels
 display_board(Board) :-
@@ -172,8 +186,8 @@ get_next_move(human, _, Move) :-
         fail
     ).
 
-get_next_move(computer, GameState, Move) :-
-    choose_move(GameState, 1, Move). % Example: using level 1 AI
+get_next_move(computer(Difficulty), GameState, Move) :-
+    choose_move(GameState, Difficulty, Move).
 
 % Executes a move and updates the game state
 % move(+GameState, +Move, -NewGameState)
@@ -250,6 +264,11 @@ step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
         TargetCol = NextCol,
         NextCell \= empty
     ).
+
+% Level Easy
+choose_move(GameState, 1, RandomMove) :-
+    valid_moves(GameState, Moves),
+    random_member(RandomMove, Moves).
 
 replace_cell(Board, Row, Col, NewValue, NewBoard) :-
     nth1(Row, Board, OldRow),
