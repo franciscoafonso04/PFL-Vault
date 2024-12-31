@@ -47,7 +47,11 @@ display_board(Board) :-
 
 % Prints column numbers
 print_columns :- 
-    forall(between(1, 9, Col), (write(Col), write(' '))).
+    maplist(print_column, [1, 2, 3, 4, 5, 6, 7, 8, 9]).
+
+% Helper to print each column number followed by a space
+print_column(Col) :-
+    write(Col), write(' ').
 
 % Prints each row of the board, preceded by row number
 print_rows([], _).
@@ -62,8 +66,8 @@ print_rows([Row | Rest], RowNum) :-
 % Prints a single row with space between elements
 print_row([]).
 print_row([Cell | Rest]) :- 
-    (Cell == black -> write('\033[34mX \033[0m')   % Blue for black
-    ; Cell == white -> write('\033[32mO \033[0m')  % Green for white
+    (Cell == black -> write('X ')   % Blue for black
+    ; Cell == white -> write('O ')  % Green for white
     ; write('  ')),                 % Orange for empty
     print_row(Rest).
 
@@ -75,7 +79,7 @@ setup_game(Player1Type, Player2Type) :-
     GameConfig = [player1:Player1Type, player2:Player2Type],
     initial_state(GameConfig, GameState),
     !, % Prevent fallback to other clauses
-    game_loop(GameState).
+    game_loop(GameConfig, GameState).
 
 % Gets current player
 current_player(game_state(_, Player), Player).
@@ -92,35 +96,17 @@ initial_state(_, game_state(Board, player1)) :-
 
 
 % Main game loop
-game_loop(GameState) :-
+game_loop(GameConfig, GameState) :-
     display_game(GameState),
-    valid_moves(GameState, Moves),
-    (
-        Moves = [] ->
-        (write('No valid moves! Game over.'), nl, !) % Cut here to stop backtracking
-    ;
-        current_player(GameState, Player),
-        get_valid_move(Player, Moves, Move),
-        move(GameState, Move, NewGameState),
-        !, % Prevent backtracking into previous moves
-        game_loop(NewGameState)
-    ).
 
-get_valid_move(_, Moves, Move) :-
-    repeat,
-    write('Enter your move as move(Row, Col, Direction): '),
-    read(Input),
-    (
-        Input = exit -> 
-        write('Exiting the game.'), nl, halt % Halts the program
-    ;
-        Input = move(Row, Col, Dir),
-        member(move(Row, Col, Dir), Moves) ->
-        Move = Input, !
-    ;
-        write('Invalid move. Try again.'), nl, fail
-    ).
+    current_player(GameState, Player),  % Get the current player (player1 or player2)
+    get_player_type(GameConfig, Player, PlayerType),  % Get the player type from GameConfig
 
+    get_next_move(PlayerType, GameState, Move),
+
+    move(GameState, Move, NewGameState),
+    !, % Prevent backtracking into previous moves
+    game_loop(GameConfig, NewGameState). 
 
 % Displays the game board and other information
 display_game(game_state(Board, Player)) :-
@@ -162,13 +148,16 @@ value(game_state(Board, _), player2, Value) :-
     length(Player2Moves, Player2MoveCount),
     Value is Player2MoveCount - Player1MoveCount.
 
-
 % Gets the next move for the current player
 get_next_move(human, _, Move) :-
+    repeat,
     write('Enter your move as move(Row, Col, Direction): '),
     read(Input),
     (
-        Input = move(Row, Col, Dir) ->
+        Input = exit -> 
+        write('Exiting the game.'), nl, halt % Halts the program
+    ;
+        Input = move(_, _, _) ->
         Move = Input
     ;
         write('Invalid format. Use move(Row, Col, Direction).'), nl,
@@ -181,6 +170,9 @@ get_next_move(computer, GameState, Move) :-
 % Executes a move and updates the game state
 % move(+GameState, +Move, -NewGameState)
 move(game_state(Board, Player), move(Row, Col, Dir), game_state(NewBoard, NextPlayer)) :-
+    valid_moves(game_state(Board, Player), Moves), % Check if move is valid
+    member(move(Row, Col, Dir), Moves),
+
     next_position(Row, Col, Dir, NewRow, NewCol),
     within_bounds(Board, NewRow, NewCol),
     replace_cell(Board, Row, Col, empty, TempBoard), % Remove piece from original position
@@ -205,6 +197,10 @@ player_piece(player2, white).
 opponent_piece(player1, white).
 opponent_piece(player2, black).
 
+% Player Type
+get_player_type(GameConfig, player1, Player1Type) :- member(player1:Player1Type, GameConfig).
+get_player_type(GameConfig, player2, Player2Type) :- member(player2:Player2Type, GameConfig).
+
 % Announces the winner
 announce_winner(Winner) :-
     write('Game over! Winner: '), write(Winner), nl.
@@ -213,7 +209,6 @@ announce_winner(Winner) :-
 
 % valid_moves(+GameState, -ListOfMoves)
 valid_moves(game_state(Board, Player), Moves) :-
-    write('Checking valid moves for Player: '), write(Player), nl,
     findall(move(Row, Col, Dir),
         (valid_direction(Dir), valid_move(Board, Player, Row, Col, Dir)),
         Moves),

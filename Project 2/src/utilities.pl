@@ -36,3 +36,4 @@ next_position(Row, Col, southeast, NextRow, NextCol) :-
 next_position(Row, Col, southwest, NextRow, NextCol) :-
     NextRow is Row + 1,
     NextCol is Col - 1.
+
