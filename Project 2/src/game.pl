@@ -270,6 +270,26 @@ choose_move(GameState, 1, RandomMove) :-
     valid_moves(GameState, Moves),
     random_member(RandomMove, Moves).
 
+value(game_state(Board, Player), Player, Value) :-
+    % Get opponent
+    opponent_piece(Player, Opponent),
+
+    % Calculate the opponent's valid moves after this state
+    valid_moves(game_state(Board, Opponent), OpponentMoves),
+    length(OpponentMoves, OpponentMoveCount),
+
+    % Minimize the opponent's valid moves
+    Value is -OpponentMoveCount. % Negative because fewer moves for the opponent is better
+
+choose_move(GameState, 2, BestMove) :-
+    valid_moves(GameState, Moves),
+    findall(Value-Move,
+        (member(Move, Moves),
+         move(GameState, Move, NewGameState), % Simulate the move
+         value(NewGameState, player2, Value)), % Evaluate the state for the opponent
+        ScoredMoves),
+    max_member(_-BestMove, ScoredMoves). % Select the move with the highest (most negative) score
+
 replace_cell(Board, Row, Col, NewValue, NewBoard) :-
     nth1(Row, Board, OldRow),
     replace_in_list(OldRow, Col, NewValue, NewRow),
