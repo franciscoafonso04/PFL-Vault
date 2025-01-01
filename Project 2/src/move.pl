@@ -22,7 +22,7 @@ choose_move(GameState, human, Move) :-
 
 
 % Computer player's move, Level 1 (random move)
-choose_move(GameState, computer(1), Move) :-
+choose_move(GameState, computer(1), RandomMove) :-
     valid_moves(GameState, Moves),
     random_member(RandomMove, Moves).
 
