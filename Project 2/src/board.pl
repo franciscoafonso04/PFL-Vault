@@ -1,4 +1,6 @@
 :- module(board, [initial_state/2, display_game/1]).
+:- use_module('validation.pl').
+:- use_module('utilities.pl').
 
 % Initializes the game state
 initial_state(_, game_state(Board, player1)) :-
@@ -12,12 +14,28 @@ initial_state(_, game_state(Board, player1)) :-
 
 % Displays the game board and other information
 display_game(game_state(Board, Player)) :-
-    write('Current board:'), nl,
+    player_profile(Player, Profile),
+
+    valid_moves(game_state(Board, Player), Moves),
+    length(Moves, MoveCount),
+
+    player_piece(Player, PlayerPiece),
+    count_pieces(Board, PlayerPiece, PlayerPieceCount),
+
+    opponent_piece(Player, OpponentPiece),
+    count_pieces(Board, OpponentPiece, OpponentPieceCount),
+
+    write('-------------------------------------------------------------------------------------'), nl,
+    write(Profile),
+    write(' | Possible moves: '), write(MoveCount),
+    write(' | Player Pieces: '), write(PlayerPieceCount),
+    write(' | Opponent Pieces: '), write(OpponentPieceCount), nl,
     display_board(Board),
-    write('Current player: '), write(Player), nl.
+    nl. % Ensure this is the end of the predicate.
 
 % Displays the board with column and row labels
 display_board(Board) :-
+    write('-------------------------------------------------------------------------------------'), nl,
     % Print column headers
     write('    '),
     print_columns,
