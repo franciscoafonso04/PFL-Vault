@@ -1,4 +1,7 @@
 :- use_module('utilities.pl').
+:- use_module('board.pl').
+:- use_module('move.pl').
+:- use_module('validation.pl').
 :- use_module(library(lists)).
 :- use_module(library(random)).
 
@@ -23,7 +26,6 @@ display_main_menu :-
         write('Invalid option. Please try again.'), nl,
         display_main_menu
     ).
-
 
 % Handle user input for the menu
 handle_menu_option(1) :-
@@ -53,41 +55,6 @@ select_difficulty(Difficulty, Computer) :-
         select_difficulty(Difficulty)
     ).
 
-% Displays the board with column and row labels
-display_board(Board) :-
-    % Print column headers
-    write('    '),
-    print_columns,
-    nl,
-    % Print board rows with row numbers
-    print_rows(Board, 1).
-
-% Prints column numbers
-print_columns :- 
-    maplist(print_column, [1, 2, 3, 4, 5, 6, 7, 8, 9]).
-
-% Helper to print each column number followed by a space
-print_column(Col) :-
-    write(Col), write(' ').
-
-% Prints each row of the board, preceded by row number
-print_rows([], _).
-print_rows([Row | Rest], RowNum) :- 
-    % Print row number
-    write(RowNum), write(' | '),
-    print_row(Row),
-    write('|'), nl,
-    NextRowNum is RowNum + 1,
-    print_rows(Rest, NextRowNum).
-
-% Prints a single row with space between elements
-print_row([]).
-print_row([Cell | Rest]) :- 
-    (Cell == black -> write('X ')   % Blue for black
-    ; Cell == white -> write('O ')  % Green for white
-    ; write('  ')),                 % Orange for empty
-    print_row(Rest).
-
 %------------------------------------------------------------------------------------------------------------
 
 % Sets up the game configuration and starts the initial state
@@ -97,17 +64,6 @@ setup_game(Player1Type, Player2Type) :-
     initial_state(GameConfig, GameState),
     !, % Prevent fallback to other clauses
     game_loop(GameConfig, GameState).
-
-% Initializes the game state
-initial_state(_, game_state(Board, player1)) :-
-    Board = [
-        [black, white, black, white, black, white, black, white, black],
-        [white, empty, empty, empty, empty, empty, empty, empty, white],
-        [empty, empty, empty, empty, empty, empty, empty, empty, empty],
-        [black, empty, empty, empty, empty, empty, empty, empty, black],
-        [white, black, white, black, white, black, white, black, white]
-    ].
-
 
 % Main game loop
 game_loop(_, GameState) :-
@@ -131,13 +87,6 @@ game_loop(GameConfig, GameState) :-
     game_loop(GameConfig, NewGameState).  % Continue the game loop
 
 
-% Displays the game board and other information
-display_game(game_state(Board, Player)) :-
-    write('Current board:'), nl,
-    display_board(Board),
-    write('Current player: '), write(Player), nl.
-
-
 % Determines if the game is over and identifies the winner, should change to more declarative solution after solving more important things
 game_over(game_state(Board, _), Winner) :-
     % Check if both players have no valid moves
@@ -154,146 +103,3 @@ game_over(game_state(Board, _), Winner) :-
     ;
         Winner = nobody
     ).
-
-% choose_move(+GameState, +Level, +Move)
-% Gets the next move for the current player
-choose_move(GameState, human, Move) :-
-    write('Enter your move (Row, Col, Direction) or "exit" to quit: '), nl,
-    read(Input),
-    (   Input == exit ->
-        write('Exiting the game...'), nl,
-        halt  % Ends the Prolog program
-    ;   Input = Move,
-        valid_moves(GameState, Moves),
-        (member(Move, Moves) ->
-            true
-        ;
-            write('Invalid move, please try again.'), nl,
-            choose_move(human, GameState, Move)
-        )
-    ).
-
-
-% Computer player's move, Level 1 (random move)
-choose_move(GameState, computer(1), Move) :-
-    valid_moves(GameState, Moves),
-    random_member(RandomMove, Moves).
-
-% Computer player's move, Level 2 (strategic move)
-choose_move(GameState, computer(2), BestMove) :-
-    current_player(GameState, Player),  % Get the current player (player1 or player2)
-    switch_player(Player, Opponent),   % Get the opponent
-
-    valid_moves(GameState, Moves), % Get all valid moves
-    findall(Value-Move,
-        (member(Move, Moves),
-        move(GameState, Move, NewGameState), % Simulate the move
-        value(NewGameState, Player, PlayerValue),  % Evaluate the state for the current player
-        value(NewGameState, Opponent, OpponentValue), % Evaluate the state for the opponent
-        Value is PlayerValue - OpponentValue), % Calculate the net value of the move
-        ScoredMoves),
-    max_member(_-BestMove, ScoredMoves). % Select the move with the highest score
-
-
-% Executes a move and updates the game state
-% move(+GameState, +Move, -NewGameState)
-move(game_state(Board, Player), move(Row, Col, Dir), game_state(NewBoard, NextPlayer)) :-
-    valid_moves(game_state(Board, Player), Moves), % Check if move is valid
-    member(move(Row, Col, Dir), Moves), % Ensure the move is valid
-
-    player_piece(Player, Piece), % Get the player's piece
-    capture_move(Board, Row, Col, Dir, Piece, TempBoard), % Execute the move
-
-    switch_player(Player, NextPlayer), % Switch the player
-    NewBoard = TempBoard.
-
-% capture_move(+Board, +Row, +Col, +Dir, +Piece, -NewBoard)
-capture_move(Board, Row, Col, Dir, Piece, NewBoard) :-
-    next_position(Row, Col, Dir, NewRow, NewCol),
-    within_bounds(Board, NewRow, NewCol),
-    nth1(NewRow, Board, RowData),
-    nth1(NewCol, RowData, Cell),
-    (
-        Cell = empty -> % Continue moving if the cell is empty
-        replace_cell(Board, Row, Col, empty, TempBoard), % Remove piece from current position
-        capture_move(TempBoard, NewRow, NewCol, Dir, Piece, NewBoard) % Recurse to the next position
-    ;
-        Cell \= empty, % Stop when the cell is not empty (opponent's piece)
-        replace_cell(Board, Row, Col, empty, TempBoard), % Remove piece from original position
-        replace_cell(TempBoard, NewRow, NewCol, empty, TempBoard2), % Remove the opponent's piece
-        replace_cell(TempBoard2, Row, Col, Piece, NewBoard) % Place piece in the final position
-    ).
-    
-%------------------------------------------------------------------------------------------------------------
-
-% valid_moves(+GameState, -ListOfMoves)
-valid_moves(game_state(Board, Player), Moves) :-
-    findall(move(Row, Col, Dir),
-        (valid_direction(Dir), valid_move(Board, Player, Row, Col, Dir)),
-        Moves).
-    %write('Valid Moves for '), write(Player), write(': '), write(Moves), nl, nl.
-
-
-% valid_move(+Board, +Player, +Row, +Col, +Direction)
-valid_move(Board, Player, Row, Col, Dir) :-
-    player_piece(Player, Piece), % Map the current player to their piece
-    nth1(Row, Board, RowData),
-    nth1(Col, RowData, Cell),
-    Cell = Piece, % Ensure this cell belongs to the player
-    capture_possible(Board, Player, Row, Col, Dir). % Check if a capture is possible in the given direction
-
-
-% capture_possible(+Board, +Player, +Row, +Col, -Direction)
-capture_possible(Board, Player, Row, Col, Direction) :-
-    next_position(Row, Col, Direction, NextRow, NextCol),
-    within_bounds(Board, NextRow, NextCol),
-    nth1(NextRow, Board, NextRowData),
-    nth1(NextCol, NextRowData, NextCell),
-    NextCell = empty, % Ensure the first step is into an empty cell
-
-    step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol),
-    within_bounds(Board, TargetRow, TargetCol),
-    nth1(TargetRow, Board, TargetRowData),
-    nth1(TargetCol, TargetRowData, TargetCell),
-    opponent_piece(Player, Piece),
-    TargetCell = Piece.
-
-
-step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
-    next_position(Row, Col, Direction, NextRow, NextCol),
-    within_bounds(Board, NextRow, NextCol),
-    nth1(NextRow, Board, NextRowData),
-    nth1(NextCol, NextRowData, NextCell),
-    (
-        NextCell = empty ->
-        step_towards_capture(Board, NextRow, NextCol, Direction, TargetRow, TargetCol) % Continue stepping
-    ;
-        TargetRow = NextRow,
-        TargetCol = NextCol,
-        NextCell \= empty
-    ).
-
-
-% value(+GameState, +Player, -Value)
-value(game_state(Board, _), Player, Value) :-
-    % Get opponent
-    switch_player(Player, Opponent),
-
-    % Calculate valid moves for the current player and opponent
-    valid_moves(game_state(Board, Player), PlayerMoves),
-    length(PlayerMoves, PlayerMoveCount),
-
-    valid_moves(game_state(Board, Opponent), OpponentMoves),
-    length(OpponentMoves, OpponentMoveCount),
-
-    % Compute the difference
-    Value is PlayerMoveCount - OpponentMoveCount.
-
-replace_cell(Board, Row, Col, NewValue, NewBoard) :-
-    nth1(Row, Board, OldRow),
-    replace_in_list(OldRow, Col, NewValue, NewRow),
-    replace_in_list(Board, Row, NewRow, NewBoard).
-
-replace_in_list(List, Index, Value, NewList) :-
-    nth1(Index, List, _, Rest),
-    nth1(Index, NewList, Value, Rest).
