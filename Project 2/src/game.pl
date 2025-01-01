@@ -10,6 +10,7 @@ play :- display_main_menu.
 
 display_main_menu :-
     write('Welcome to Collapse!'), nl,
+    write('Mode selection:'), nl,
     write('1. Human vs Human'), nl,
     write('2. Human vs Computer'), nl,
     write('3. Computer vs Computer'), nl,
@@ -28,10 +29,12 @@ display_main_menu :-
 handle_menu_option(1) :-
     setup_game(human, human).
 handle_menu_option(2) :-
-    select_difficulty(Difficulty),
+    select_difficulty(Difficulty, ''),
     setup_game(human, computer(Difficulty)).
 handle_menu_option(3) :-
-    setup_game(computer(1), computer(1)).
+    select_difficulty(Difficulty_1, 1),
+    select_difficulty(Difficulty_2, 2),
+    setup_game(computer(Difficulty_1), computer(Difficulty_2)).
 handle_menu_option(4) :-
     write('Goodbye!'), nl, !.
 handle_menu_option(_) :-
@@ -39,10 +42,10 @@ handle_menu_option(_) :-
     display_main_menu.
 
 % Displays a menu to select difficulty level for the AI
-select_difficulty(Difficulty) :-
-    write('Select AI Difficulty:'), nl,
-    write('1. Easy (Chico)'), nl,
-    write('2. Hard (Ramos)'), nl,
+select_difficulty(Difficulty, Computer) :-
+    write('Computer '), write(Computer), write(' Level Selection:'), nl,
+    write('1. Level 1'), nl,
+    write('2. Level 2'), nl,
     write('Choose an option: '),
     read(Option),
     (   member(Option, [1, 2]) -> Difficulty = Option
@@ -95,9 +98,6 @@ setup_game(Player1Type, Player2Type) :-
     !, % Prevent fallback to other clauses
     game_loop(GameConfig, GameState).
 
-% Gets current player
-current_player(game_state(_, Player), Player).
-
 % Initializes the game state
 initial_state(_, game_state(Board, player1)) :-
     Board = [
@@ -117,13 +117,14 @@ game_loop(_, GameState) :-
     !,  % Stop the game loop
     announce_winner(Winner).  % Announce the result
 
+
 game_loop(GameConfig, GameState) :-
     display_game(GameState),
 
     current_player(GameState, Player),  % Get the current player (player1 or player2)
     get_player_type(GameConfig, Player, PlayerType),  % Get the player type from GameConfig
 
-    get_next_move(PlayerType, GameState, Move),
+    choose_move(GameState, PlayerType, Move),
 
     move(GameState, Move, NewGameState),
     !,  % Prevent backtracking into previous moves
@@ -154,40 +155,45 @@ game_over(game_state(Board, _), Winner) :-
         Winner = nobody
     ).
 
-% value(+GameState, +Player, -Value)
-value(game_state(Board, _), player1, Value) :-
-    valid_moves(game_state(Board, player1), Player1Moves),
-    valid_moves(game_state(Board, player2), Player2Moves),
-    length(Player1Moves, Player1MoveCount),
-    length(Player2Moves, Player2MoveCount),
-    Value is Player1MoveCount - Player2MoveCount.
-
-% value(+GameState, +Player, -Value)
-value(game_state(Board, _), player2, Value) :-
-    valid_moves(game_state(Board, player1), Player1Moves),
-    valid_moves(game_state(Board, player2), Player2Moves),
-    length(Player1Moves, Player1MoveCount),
-    length(Player2Moves, Player2MoveCount),
-    Value is Player2MoveCount - Player1MoveCount.
-
+% choose_move(+GameState, +Level, +Move)
 % Gets the next move for the current player
-get_next_move(human, _, Move) :-
-    repeat,
-    write('Enter your move as move(Row, Col, Direction): '),
+choose_move(GameState, human, Move) :-
+    write('Enter your move (Row, Col, Direction) or "exit" to quit: '), nl,
     read(Input),
-    (
-        Input = exit -> 
-        write('Exiting the game.'), nl, halt % Halts the program
-    ;
-        Input = move(_, _, _) ->
-        Move = Input
-    ;
-        write('Invalid format. Use move(Row, Col, Direction).'), nl,
-        fail
+    (   Input == exit ->
+        write('Exiting the game...'), nl,
+        halt  % Ends the Prolog program
+    ;   Input = Move,
+        valid_moves(GameState, Moves),
+        (member(Move, Moves) ->
+            true
+        ;
+            write('Invalid move, please try again.'), nl,
+            choose_move(human, GameState, Move)
+        )
     ).
 
-get_next_move(computer(Difficulty), GameState, Move) :-
-    choose_move(GameState, Difficulty, Move).
+
+% Computer player's move, Level 1 (random move)
+choose_move(GameState, computer(1), Move) :-
+    valid_moves(GameState, Moves),
+    random_member(RandomMove, Moves).
+
+% Computer player's move, Level 2 (strategic move)
+choose_move(GameState, computer(2), BestMove) :-
+    current_player(GameState, Player),  % Get the current player (player1 or player2)
+    switch_player(Player, Opponent),   % Get the opponent
+
+    valid_moves(GameState, Moves), % Get all valid moves
+    findall(Value-Move,
+        (member(Move, Moves),
+        move(GameState, Move, NewGameState), % Simulate the move
+        value(NewGameState, Player, PlayerValue),  % Evaluate the state for the current player
+        value(NewGameState, Opponent, OpponentValue), % Evaluate the state for the opponent
+        Value is PlayerValue - OpponentValue), % Calculate the net value of the move
+        ScoredMoves),
+    max_member(_-BestMove, ScoredMoves). % Select the move with the highest score
+
 
 % Executes a move and updates the game state
 % move(+GameState, +Move, -NewGameState)
@@ -218,15 +224,15 @@ capture_move(Board, Row, Col, Dir, Piece, NewBoard) :-
         replace_cell(TempBoard2, Row, Col, Piece, NewBoard) % Place piece in the final position
     ).
     
-
 %------------------------------------------------------------------------------------------------------------
 
 % valid_moves(+GameState, -ListOfMoves)
 valid_moves(game_state(Board, Player), Moves) :-
     findall(move(Row, Col, Dir),
         (valid_direction(Dir), valid_move(Board, Player, Row, Col, Dir)),
-        Moves),
-    write('Valid Moves for '), write(Player), write(': '), write(Moves), nl, nl.
+        Moves).
+    %write('Valid Moves for '), write(Player), write(': '), write(Moves), nl, nl.
+
 
 % valid_move(+Board, +Player, +Row, +Col, +Direction)
 valid_move(Board, Player, Row, Col, Dir) :-
@@ -235,6 +241,7 @@ valid_move(Board, Player, Row, Col, Dir) :-
     nth1(Col, RowData, Cell),
     Cell = Piece, % Ensure this cell belongs to the player
     capture_possible(Board, Player, Row, Col, Dir). % Check if a capture is possible in the given direction
+
 
 % capture_possible(+Board, +Player, +Row, +Col, -Direction)
 capture_possible(Board, Player, Row, Col, Direction) :-
@@ -251,6 +258,7 @@ capture_possible(Board, Player, Row, Col, Direction) :-
     opponent_piece(Player, Piece),
     TargetCell = Piece.
 
+
 step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
     next_position(Row, Col, Direction, NextRow, NextCol),
     within_bounds(Board, NextRow, NextCol),
@@ -265,30 +273,21 @@ step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
         NextCell \= empty
     ).
 
-% Level Easy
-choose_move(GameState, 1, RandomMove) :-
-    valid_moves(GameState, Moves),
-    random_member(RandomMove, Moves).
 
-value(game_state(Board, Player), Player, Value) :-
+% value(+GameState, +Player, -Value)
+value(game_state(Board, _), Player, Value) :-
     % Get opponent
-    opponent_piece(Player, Opponent),
+    switch_player(Player, Opponent),
 
-    % Calculate the opponent's valid moves after this state
+    % Calculate valid moves for the current player and opponent
+    valid_moves(game_state(Board, Player), PlayerMoves),
+    length(PlayerMoves, PlayerMoveCount),
+
     valid_moves(game_state(Board, Opponent), OpponentMoves),
     length(OpponentMoves, OpponentMoveCount),
 
-    % Minimize the opponent's valid moves
-    Value is -OpponentMoveCount. % Negative because fewer moves for the opponent is better
-
-choose_move(GameState, 2, BestMove) :-
-    valid_moves(GameState, Moves),
-    findall(Value-Move,
-        (member(Move, Moves),
-         move(GameState, Move, NewGameState), % Simulate the move
-         value(NewGameState, player2, Value)), % Evaluate the state for the opponent
-        ScoredMoves),
-    max_member(_-BestMove, ScoredMoves). % Select the move with the highest (most negative) score
+    % Compute the difference
+    Value is PlayerMoveCount - OpponentMoveCount.
 
 replace_cell(Board, Row, Col, NewValue, NewBoard) :-
     nth1(Row, Board, OldRow),

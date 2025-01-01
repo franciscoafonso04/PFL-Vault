@@ -1,4 +1,4 @@
-:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, announce_winner/1]).
+:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, announce_winner/1, current_player/2]).
 :- use_module(library(lists)).
 
 % Valid directions for movement
@@ -36,6 +36,9 @@ next_position(Row, Col, southeast, NextRow, NextCol) :-
 next_position(Row, Col, southwest, NextRow, NextCol) :-
     NextRow is Row + 1,
     NextCol is Col - 1.
+
+% Gets current player
+current_player(game_state(_, Player), Player).
 
 % Switches the player
 switch_player(player1, player2).
