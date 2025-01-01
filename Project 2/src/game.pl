@@ -78,41 +78,26 @@ setup_game(Player1Type, Player2Type) :-
     !, % Prevent fallback to other clauses
     game_loop(GameConfig, GameState).
 
-% Main game loop
-game_loop(_, GameState) :-
-    % Check if the game is over
-    game_over(GameState, Winner),
-    Winner \= nobody,  % If there is a winner or it's a draw
-    !,  % Stop the game loop
-    announce_winner(Winner).  % Announce the result
-
-
 game_loop(GameConfig, GameState) :-
     display_game(GameState),
 
-    current_player(GameState, Player),  % Get the current player (player1 or player2)
-    get_player_type(GameConfig, Player, PlayerType),  % Get the player type from GameConfig
-
-    choose_move(GameState, PlayerType, Move),
-
-    move(GameState, Move, NewGameState),
-    !,  % Prevent backtracking into previous moves
-    game_loop(GameConfig, NewGameState).  % Continue the game loop
-
+    % Check if the game is over
+    (   game_over(GameState, Winner)
+    ->  announce_winner(Winner), !  % Announce the winner and stop the loop
+    ;   % Otherwise, continue the game
+        current_player(GameState, Player),  % Get the current player (player1 or player2)
+        get_player_type(GameConfig, Player, PlayerType),  % Get the player type from GameConfig
+        choose_move(GameState, PlayerType, Move),
+        move(GameState, Move, NewGameState),
+        game_loop(GameConfig, NewGameState)
+    ).
 
 % Determines if the game is over and identifies the winner, should change to more declarative solution after solving more important things
-game_over(game_state(Board, _), Winner) :-
-    % Check if both players have no valid moves
-    valid_moves(game_state(Board, player1), Player1Moves),
-    valid_moves(game_state(Board, player2), Player2Moves),
+game_over(GameState, Winner) :-
+    current_player(GameState, Player),         % Get the current player
+    valid_moves(GameState, PlayerMoves),       % Check the current player's valid moves
 
-    % Determine the winner or draw based on conditions
-    (
-        Player1Moves = [], Player2Moves = [] -> Winner = draw
-    ;
-        Player1Moves = [] -> Winner = player2
-    ;
-        Player2Moves = [] -> Winner = player1
-    ;
-        Winner = nobody
+    (   PlayerMoves = []                       % If the current player has no valid moves
+    ->  switch_player(Player, Winner)          % The opponent is the winner
+    ;   fail                                   % Otherwise, the game is not over
     ).

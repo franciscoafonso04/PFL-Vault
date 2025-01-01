@@ -66,7 +66,13 @@ get_player_type(GameConfig, player2, Player2Type) :- member(player2:Player2Type,
 
 % Announces the winner
 announce_winner(Winner) :-
-    write('Game over! Winner: '), write(Winner), nl.
+    write('Game over! '),
+    (   Winner = draw
+    ->  write('It\'s a draw!')
+    ;   write('Winner: '), write(Winner)
+    ),
+    nl, halt.  % Stops the program.
+
 
 % count_pieces(+Board, +Piece, -Count)
 % Counts the occurrences of a specific Piece on the Board.
