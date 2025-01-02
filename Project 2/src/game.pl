@@ -79,7 +79,7 @@ game_loop(GameConfig, GameState) :-
 
     % Check if the game is over
     (   game_over(GameState, Winner)
-    ->  announce_winner(Winner), !  % Announce the winner and stop the loop
+    ->  write('Game over! Winner: '), write(Winner), halt, !  % Announce the winner and stop the loop
     ;   % Otherwise, continue the game
         current_player(GameState, Player),  % Get the current player (player1 or player2)
         get_player_type(GameConfig, Player, PlayerType),  % Get the player type from GameConfig

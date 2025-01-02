@@ -1,4 +1,4 @@
-:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, announce_winner/1, current_player/2, player_profile/2, convert_row/2]).
+:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, current_player/2, player_profile/2, convert_row/2]).
 :- use_module(library(lists)).
 
 % Valid directions for movement
@@ -69,12 +69,3 @@ convert_row(2, 4).
 convert_row(3, 3).
 convert_row(4, 2).
 convert_row(5, 1).
-
-% Announces the winner
-announce_winner(Winner) :-
-    write('Game over! '),
-    (   Winner = draw
-    ->  write('It\'s a draw!')
-    ;   write('Winner: '), write(Winner)
-    ),
-    nl, halt.  % Stops the program.

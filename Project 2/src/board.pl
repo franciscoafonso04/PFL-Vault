@@ -20,8 +20,8 @@ display_game(game_state(Board, Player)) :-
     length(Moves, MoveCount),
 
     write('-------------------------------------------------------------------------------------'), nl,
-    write(Profile),
-    write(' | Possible moves: '), write(MoveCount), nl,
+    write(Profile), write(' | Possible moves: '), write(MoveCount), nl,
+    write('-------------------------------------------------------------------------------------'), nl,
     display_board(Board),
     nl.
 
