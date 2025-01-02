@@ -7,7 +7,8 @@
 % choose_move(+GameState, +Level, +Move)
 % Gets the next move for the current player
 choose_move(GameState, human, Move) :-
-    write('Enter your move as move(Row, Col, Direction) or "exit" to quit: '), nl,
+    write('Enter your move as "Row Col Direction" or "exit" to quit: '),
+    repeat,
     read(Input),
     (   Input == exit ->
         write('Exiting the game...'), nl,
@@ -19,10 +20,10 @@ choose_move(GameState, human, Move) :-
         
         valid_moves(GameState, Moves),
         (member(Move, Moves) ->
-            true
+            !, true
         ;
             write('Invalid move, please try again.'), nl,
-            choose_move(GameState, human, Move)
+            fail
         )
     ).
 
