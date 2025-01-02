@@ -1,4 +1,4 @@
-:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, announce_winner/1, current_player/2, count_pieces/3, player_profile/2]).
+:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, announce_winner/1, current_player/2, player_profile/2]).
 :- use_module(library(lists)).
 
 % Valid directions for movement
