@@ -37,8 +37,8 @@ handle_menu_option(1) :-
     select_rule(Rule),
     setup_game(human, human, Rule).
 handle_menu_option(2) :-
-    select_difficulty(Difficulty, ''),
     select_rule(Rule),
+    select_difficulty(Difficulty, ''),
     setup_game(human, computer(Difficulty), Rule).
 handle_menu_option(3) :-
     select_difficulty(Difficulty, ''),
@@ -63,10 +63,11 @@ select_difficulty(Difficulty, Computer) :-
     write('2. Level 2'), nl,
     write('-------------------------------------------------------------------------------------'), nl,
     write('Choose an option: '),
-    read(Option),
-    (   member(Option, [1, 2]) -> Difficulty = Option
+    repeat,
+    read(DifOption),
+    (   member(DifOption, [1, 2]) -> Difficulty = DifOption
     ;   write('Invalid option. Please try again.'), nl,
-        select_difficulty(Difficulty)
+        fail
     ).
 
 % Displays a menu to select the rule
@@ -77,17 +78,18 @@ select_rule(Rule) :-
     write('2. Easy Rule (Diagonals allowed everywhere)'), nl,
     write('-------------------------------------------------------------------------------------'), nl,
     write('Choose an option: '),
-    read(Option),
-    (   member(Option, [1, 2]) -> Rule = Option
+    repeat,
+    read(RuleOption),
+    (   member(RuleOption, [1, 2]) -> Rule = RuleOption
     ;   write('Invalid option. Please try again.'), nl,
-        select_rule(Rule)
+        fail
     ).
 
 %------------------------------------------------------------------------------------------------------------
 
 % Sets up the game configuration and starts the initial state
 setup_game(Player1Type, Player2Type, Rule) :-
-    GameConfig = [player1:Player1Type, player2:Player2Type, rule(Rule)],
+    GameConfig = [player1:Player1Type, player2:Player2Type, Rule],
     initial_state(GameConfig, GameState),
     !, % Prevent fallback to other clauses
     game_loop(GameConfig, GameState).
@@ -112,6 +114,7 @@ game_over(GameState, Winner) :-
     valid_moves(GameState, PlayerMoves),       % Check the current player's valid moves
 
     (   PlayerMoves = []                       % If the current player has no valid moves
-    ->  switch_player(Player, Winner)          % The opponent is the winner
+    ->  switch_player(Player, Opponent), 
+        player_profile(Opponent, Winner)
     ;   fail                                   % Otherwise, the game is not over
     ).

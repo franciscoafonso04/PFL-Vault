@@ -7,7 +7,7 @@
 % choose_move(+GameState, +Level, +Move)
 % Gets the next move for the current player
 choose_move(GameState, human, Move) :-
-    write('Enter your move as "Row Col Direction" or "exit" to quit: '),
+    write('Enter your move as "move(Row,Col,Dir)." or "exit." to quit: '),
     repeat,
     read(Input),
     (   Input == exit ->
@@ -56,8 +56,8 @@ choose_move(GameState, computer(2), BestMove) :-
 
 % Executes a move and updates the game state
 % move(+GameState, +Move, -NewGameState)
-move(game_state(Board, Player), move(Row, Col, Dir), game_state(NewBoard, NextPlayer)) :-
-    valid_moves(game_state(Board, Player), Moves), % Check if move is valid
+move(game_state(Board, Player, _), move(Row, Col, Dir), game_state(NewBoard, NextPlayer, _)) :-
+    valid_moves(game_state(Board, Player, _), Moves), % Check if move is valid
     member(move(Row, Col, Dir), Moves), % Ensure the move is valid
 
     player_piece(Player, Piece), % Get the player's piece
@@ -69,7 +69,7 @@ move(game_state(Board, Player), move(Row, Col, Dir), game_state(NewBoard, NextPl
 % capture_move(+Board, +Row, +Col, +Dir, +Piece, -NewBoard)
 capture_move(Board, Row, Col, Dir, Piece, NewBoard) :-
     next_position(Row, Col, Dir, NewRow, NewCol),
-    within_bounds(Board, NewRow, NewCol),
+    within_bounds(NewRow, NewCol),
     nth1(NewRow, Board, RowData),
     nth1(NewCol, RowData, Cell),
     (
@@ -84,15 +84,15 @@ capture_move(Board, Row, Col, Dir, Piece, NewBoard) :-
     ).
 
 % value(+GameState, +Player, -Value)
-value(game_state(Board, _), Player, Value) :-
+value(game_state(Board, _, _), Player, Value) :-
     % Get opponent
     switch_player(Player, Opponent),
 
     % Calculate valid moves for the current player and opponent
-    valid_moves(game_state(Board, Player), PlayerMoves),
+    valid_moves(game_state(Board, Player, _), PlayerMoves),
     length(PlayerMoves, PlayerMoveCount),
 
-    valid_moves(game_state(Board, Opponent), OpponentMoves),
+    valid_moves(game_state(Board, Opponent, _), OpponentMoves),
     length(OpponentMoves, OpponentMoveCount),
 
     % Compute the difference

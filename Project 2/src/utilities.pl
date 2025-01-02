@@ -1,5 +1,4 @@
-:- module(utilities, [valid_direction/1, is_diagonal/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, current_player/2, player_profile/2, convert_row/2]).
-:- use_module(library(lists)).
+:- module(utilities, [valid_direction/1, diagonal_allowed/4, within_bounds/2, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, current_player/2, player_profile/2, convert_row/2]).
 
 % Valid directions for movement
 valid_direction(north).
@@ -11,19 +10,17 @@ valid_direction(northwest).
 valid_direction(southeast).
 valid_direction(southwest).
 
-% Diagonal directions
-is_diagonal(northeast).
-is_diagonal(northwest).
-is_diagonal(southeast).
-is_diagonal(southwest).
+% Rule 2 (Easy Rule): All diagonals are allowed everywhere
+diagonal_allowed(2, _, _, _).
 
-% Checks if a position is within the bounds of the board
-within_bounds(Board, Row, Col) :-
-    length(Board, NumRows),
-    Row > 0, Row =< NumRows, % Check row bounds
-    nth0(1, Board, FirstRow), % Get the first row to check column bounds
-    length(FirstRow, NumCols),
-    Col > 0, Col =< NumCols. % Check column bounds
+% Rule 1 (Normal Rule): Diagonals are allowed only if (Row + Col) is even
+diagonal_allowed(1, Row, Col, Dir) :-
+    member(Dir, [northeast, northwest, southeast, southwest]), % Ensure it's a diagonal direction
+    (Row + Col) mod 2 =:= 0.
+
+within_bounds(Row, Col) :-
+    Row > 0, Row =< 5, % Check row bounds
+    Col > 0, Col =< 9. % Check column bounds
 
 % Computes the next position based on the current position and direction
 next_position(Row, Col, north, NextRow, Col) :- NextRow is Row - 1.
@@ -44,7 +41,7 @@ next_position(Row, Col, southwest, NextRow, NextCol) :-
     NextCol is Col - 1.
 
 % Gets current player
-current_player(game_state(_, Player), Player).
+current_player(game_state(_, Player, _), Player).
 
 % Switches the player
 switch_player(player1, player2).

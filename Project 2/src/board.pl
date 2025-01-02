@@ -3,7 +3,7 @@
 :- use_module('utilities.pl').
 
 % Initializes the game state
-initial_state(_, game_state(Board, player1, rule(Rule))) :-
+initial_state([_, _, Rule], game_state(Board, player1, Rule)) :-
     Board = [
         [black, white, black, white, black, white, black, white, black],
         [white, empty, empty, empty, empty, empty, empty, empty, white],
@@ -13,20 +13,19 @@ initial_state(_, game_state(Board, player1, rule(Rule))) :-
     ].
 
 % Displays the game board and other information
-display_game(game_state(Board, Player)) :-
+display_game(game_state(Board, Player, Rule)) :-
     player_profile(Player, Profile),
 
-    valid_moves(game_state(Board, Player), Moves),
+    valid_moves(game_state(Board, Player, _), Moves),
     length(Moves, MoveCount),
 
     write('-------------------------------------------------------------------------------------'), nl,
     write(Profile), write(' | Possible moves: '), write(MoveCount), nl,
     write('-------------------------------------------------------------------------------------'), nl,
-    display_board(Board),
-    nl.
+    display_board(Board, Rule), nl.
 
 % Displays the board with column and row labels
-display_board(Board) :-
+display_board(Board, _) :-
     write('   + - + - + - + - + - + - + - + - + - +'), nl,
     print_rows(Board, 5),
     write('     1   2   3   4   5   6   7   8   9    ').

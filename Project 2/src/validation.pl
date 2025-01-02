@@ -3,42 +3,31 @@
 :- use_module(library(lists)).
 
 % valid_moves(+GameState, -ListOfMoves)
-valid_moves(game_state(Board, Player), Moves) :-
+valid_moves(GameState, Moves) :-
     findall(move(Row, Col, Dir),
-        (valid_direction(Dir), valid_move(Board, Player, Row, Col, Dir)),
+        (valid_direction(Dir), valid_move(GameState, Row, Col, Dir)),
         Moves).
     %write('Valid Moves for '), write(Player), write(': '), write(Moves), nl, nl.
 
-% valid_move(+Board, +Player, +Row, +Col, +Direction, +rule) with normal rule
-valid_move(Board, Player, Row, Col, Dir, game_state(_, _, rule(1))) :-
+% valid_move(+GameState, +Row, +Col, +Direction) with normal rule
+valid_move(game_state(Board, Player, Rule), Row, Col, Dir) :-
     player_piece(Player, Piece), % Map the current player to their piece
     nth1(Row, Board, RowData),
     nth1(Col, RowData, Cell),
     Cell = Piece, % Ensure this cell belongs to the player
-    (   is_diagonal(Dir) ->
-        diagonal_allowed(Row, Col)  % Only for normal mode
-    ;   true
-    ),
-    capture_possible(Board, Player, Row, Col, Dir). % Check if a capture is possible in the given direction
-
-% valid_move(+Board, +Player, +Row, +Col, +Direction, +rule) with easy rule
-valid_move(Board, Player, Row, Col, Dir, game_state(_, _, rule(2))) :-
-    player_piece(Player, Piece), % Map the current player to their piece
-    nth1(Row, Board, RowData),
-    nth1(Col, RowData, Cell),
-    Cell = Piece, % Ensure this cell belongs to the player
+    diagonal_allowed(Rule, Row, Col, Dir),  % Only for normal mode
     capture_possible(Board, Player, Row, Col, Dir). % Check if a capture is possible in the given direction
 
 % capture_possible(+Board, +Player, +Row, +Col, -Direction)
 capture_possible(Board, Player, Row, Col, Direction) :-
     next_position(Row, Col, Direction, NextRow, NextCol),
-    within_bounds(Board, NextRow, NextCol),
+    within_bounds(NextRow, NextCol),
     nth1(NextRow, Board, NextRowData),
     nth1(NextCol, NextRowData, NextCell),
     NextCell = empty, % Ensure the first step is into an empty cell
 
     step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol),
-    within_bounds(Board, TargetRow, TargetCol),
+    within_bounds(TargetRow, TargetCol),
     nth1(TargetRow, Board, TargetRowData),
     nth1(TargetCol, TargetRowData, TargetCell),
     opponent_piece(Player, Piece),
@@ -47,7 +36,7 @@ capture_possible(Board, Player, Row, Col, Direction) :-
 
 step_towards_capture(Board, Row, Col, Direction, TargetRow, TargetCol) :-
     next_position(Row, Col, Direction, NextRow, NextCol),
-    within_bounds(Board, NextRow, NextCol),
+    within_bounds(NextRow, NextCol),
     nth1(NextRow, Board, NextRowData),
     nth1(NextCol, NextRowData, NextCell),
     (
