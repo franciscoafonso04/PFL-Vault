@@ -45,20 +45,20 @@ switch_player(player1, player2).
 switch_player(player2, player1).
 
 % Player Piece Colors
-player_piece(player1, black).
-player_piece(player2, white).
+player_piece(player1, white).
+player_piece(player2, black).
 
 % Opponent Piece Colors
-opponent_piece(player1, white).
-opponent_piece(player2, black).
+opponent_piece(player1, black).
+opponent_piece(player2, white).
 
 % Player Piece Colors
-player_profile(player1, 'Player 1 - X').
-player_profile(player2, 'Player 2 - O').
+player_profile(player1, 'Player 1 - O').
+player_profile(player2, 'Player 2 - X').
 
 % Opponent Piece Colors
-opponent_board_piece(player1, 'O').
-opponent_board_piece(player2, 'X').
+opponent_board_piece(player1, 'X').
+opponent_board_piece(player2, 'O').
 
 % Player Type
 get_player_type(GameConfig, player1, Player1Type) :- member(player1:Player1Type, GameConfig).
