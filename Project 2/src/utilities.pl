@@ -72,11 +72,3 @@ announce_winner(Winner) :-
     ;   write('Winner: '), write(Winner)
     ),
     nl, halt.  % Stops the program.
-
-
-% count_pieces(+Board, +Piece, -Count)
-% Counts the occurrences of a specific Piece on the Board.
-count_pieces(Board, Piece, Count) :-
-    flatten(Board, FlatBoard), % Flatten the 2D board into a 1D list
-    include(==(Piece), FlatBoard, FilteredPieces), % Filter out only the specified Piece
-    length(FilteredPieces, Count). % Count the occurrences

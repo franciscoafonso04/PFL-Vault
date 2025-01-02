@@ -19,37 +19,18 @@ display_game(game_state(Board, Player)) :-
     valid_moves(game_state(Board, Player), Moves),
     length(Moves, MoveCount),
 
-    player_piece(Player, PlayerPiece),
-    count_pieces(Board, PlayerPiece, PlayerPieceCount),
-
-    opponent_piece(Player, OpponentPiece),
-    count_pieces(Board, OpponentPiece, OpponentPieceCount),
-
-    write('-------------------------------------------------------------------------------------'), nl,
+    nl, write('-------------------------------------------------------------------------------------'), nl,
     write(Profile),
-    write(' | Possible moves: '), write(MoveCount),
-    write(' | Player Pieces: '), write(PlayerPieceCount),
-    write(' | Opponent Pieces: '), write(OpponentPieceCount), nl,
+    write(' | Possible moves: '), write(MoveCount), nl,
     display_board(Board),
     nl. % Ensure this is the end of the predicate.
 
 % Displays the board with column and row labels
 display_board(Board) :-
     write('-------------------------------------------------------------------------------------'), nl,
-    % Print column headers
-    write('    '),
-    print_columns,
-    nl,
+    write('    1 2 3 4 5 6 7 8 9  '), nl,
     % Print board rows with row numbers
     print_rows(Board, 1).
-
-% Prints column numbers
-print_columns :- 
-    maplist(print_column, [1, 2, 3, 4, 5, 6, 7, 8, 9]).
-
-% Helper to print each column number followed by a space
-print_column(Col) :-
-    write(Col), write(' ').
 
 % Prints each row of the board, preceded by row number
 print_rows([], _).

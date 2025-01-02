@@ -3,7 +3,6 @@
 :- use_module('move.pl').
 :- use_module('validation.pl').
 :- use_module(library(lists)).
-:- use_module(library(random)).
 
 :- initialization play.
 
@@ -20,7 +19,7 @@ display_main_menu :-
     write(' \\ \\_____\\  \\ \\_____\\  \\ \\_____\\  \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_\\    \\/\\_____\\  \\ \\_____\\'), nl, 
     write('  \\/_____/   \\/_____/   \\/_____/   \\/_____/   \\/_/\\/_/   \\/_/     \\/_____/   \\/_____/'), nl, 
     write('-------------------------------------------------------------------------------------'), nl,
-    write('Mode selection:'), nl,
+    write('Mode selection '), nl,
     write('1. Human vs Human'), nl,
     write('2. Human vs Computer'), nl,
     write('3. Computer vs Human'), nl,

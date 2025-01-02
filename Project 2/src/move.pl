@@ -1,4 +1,6 @@
 :- module(move, [choose_move/3, move/3]).
+:- use_module(library(random)).
+:- use_module(library(lists)).
 :- use_module('utilities.pl').
 :- use_module('validation.pl').
 

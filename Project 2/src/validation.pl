@@ -1,4 +1,7 @@
 :- module(validation, [valid_moves/2]).
+:- use_module('utilities.pl').
+:- use_module(library(lists)).
+
 
 
 % valid_moves(+GameState, -ListOfMoves)
