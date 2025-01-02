@@ -12,7 +12,11 @@ choose_move(GameState, human, Move) :-
     (   Input == exit ->
         write('Exiting the game...'), nl,
         halt  % Ends the Prolog program
-    ;   Input = Move,
+    ;   Input = move(Row, Col, Dir),
+
+        convert_row(Row, NewRow),
+        move(NewRow, Col, Dir) = Move,
+        
         valid_moves(GameState, Moves),
         (member(Move, Moves) ->
             true
@@ -21,7 +25,6 @@ choose_move(GameState, human, Move) :-
             choose_move(GameState, human, Move)
         )
     ).
-
 
 % Computer player's move, Level 1 (random move)
 choose_move(GameState, computer(1), RandomMove) :-
