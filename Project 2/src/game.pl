@@ -34,17 +34,21 @@ display_main_menu :-
 
 % Handle user input for the menu
 handle_menu_option(1) :-
-    setup_game(human, human).
+    select_rule(Rule),
+    setup_game(human, human, Rule).
 handle_menu_option(2) :-
     select_difficulty(Difficulty, ''),
-    setup_game(human, computer(Difficulty)).
+    select_rule(Rule),
+    setup_game(human, computer(Difficulty), Rule).
 handle_menu_option(3) :-
     select_difficulty(Difficulty, ''),
-    setup_game(computer(Difficulty), human).
+    select_rule(Rule),
+    setup_game(computer(Difficulty), human, Rule).
 handle_menu_option(4) :-
     select_difficulty(Difficulty_1, ' 1'),
     select_difficulty(Difficulty_2, ' 2'),
-    setup_game(computer(Difficulty_1), computer(Difficulty_2)).
+    select_rule(Rule),
+    setup_game(computer(Difficulty_1), computer(Difficulty_2), Rule).
 handle_menu_option(5) :-
     write('Goodbye!'), nl, !.
 handle_menu_option(_) :-
@@ -65,11 +69,25 @@ select_difficulty(Difficulty, Computer) :-
         select_difficulty(Difficulty)
     ).
 
+% Displays a menu to select the rule
+select_rule(Rule) :-
+    write('-------------------------------------------------------------------------------------'), nl,
+    write('Rule Selection:'), nl,
+    write('1. Normal Rule (Diagonals only allowed in certain cells)'), nl,
+    write('2. Easy Rule (Diagonals allowed everywhere)'), nl,
+    write('-------------------------------------------------------------------------------------'), nl,
+    write('Choose an option: '),
+    read(Option),
+    (   member(Option, [1, 2]) -> Rule = Option
+    ;   write('Invalid option. Please try again.'), nl,
+        select_rule(Rule)
+    ).
+
 %------------------------------------------------------------------------------------------------------------
 
 % Sets up the game configuration and starts the initial state
-setup_game(Player1Type, Player2Type) :-
-    GameConfig = [player1:Player1Type, player2:Player2Type],
+setup_game(Player1Type, Player2Type, Rule) :-
+    GameConfig = [player1:Player1Type, player2:Player2Type, rule(Rule)],
     initial_state(GameConfig, GameState),
     !, % Prevent fallback to other clauses
     game_loop(GameConfig, GameState).

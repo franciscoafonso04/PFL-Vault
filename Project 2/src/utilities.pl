@@ -1,4 +1,4 @@
-:- module(utilities, [valid_direction/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, current_player/2, player_profile/2, convert_row/2]).
+:- module(utilities, [valid_direction/1, is_diagonal/1, within_bounds/3, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, current_player/2, player_profile/2, convert_row/2]).
 :- use_module(library(lists)).
 
 % Valid directions for movement
@@ -10,6 +10,12 @@ valid_direction(northeast).
 valid_direction(northwest).
 valid_direction(southeast).
 valid_direction(southwest).
+
+% Diagonal directions
+is_diagonal(northeast).
+is_diagonal(northwest).
+is_diagonal(southeast).
+is_diagonal(southwest).
 
 % Checks if a position is within the bounds of the board
 within_bounds(Board, Row, Col) :-

@@ -3,7 +3,7 @@
 :- use_module('utilities.pl').
 
 % Initializes the game state
-initial_state(_, game_state(Board, player1)) :-
+initial_state(_, game_state(Board, player1, rule(Rule))) :-
     Board = [
         [black, white, black, white, black, white, black, white, black],
         [white, empty, empty, empty, empty, empty, empty, empty, white],

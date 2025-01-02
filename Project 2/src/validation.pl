@@ -2,8 +2,6 @@
 :- use_module('utilities.pl').
 :- use_module(library(lists)).
 
-
-
 % valid_moves(+GameState, -ListOfMoves)
 valid_moves(game_state(Board, Player), Moves) :-
     findall(move(Row, Col, Dir),
@@ -11,15 +9,25 @@ valid_moves(game_state(Board, Player), Moves) :-
         Moves).
     %write('Valid Moves for '), write(Player), write(': '), write(Moves), nl, nl.
 
+% valid_move(+Board, +Player, +Row, +Col, +Direction, +rule) with normal rule
+valid_move(Board, Player, Row, Col, Dir, game_state(_, _, rule(1))) :-
+    player_piece(Player, Piece), % Map the current player to their piece
+    nth1(Row, Board, RowData),
+    nth1(Col, RowData, Cell),
+    Cell = Piece, % Ensure this cell belongs to the player
+    (   is_diagonal(Dir) ->
+        diagonal_allowed(Row, Col)  % Only for normal mode
+    ;   true
+    ),
+    capture_possible(Board, Player, Row, Col, Dir). % Check if a capture is possible in the given direction
 
-% valid_move(+Board, +Player, +Row, +Col, +Direction)
-valid_move(Board, Player, Row, Col, Dir) :-
+% valid_move(+Board, +Player, +Row, +Col, +Direction, +rule) with easy rule
+valid_move(Board, Player, Row, Col, Dir, game_state(_, _, rule(2))) :-
     player_piece(Player, Piece), % Map the current player to their piece
     nth1(Row, Board, RowData),
     nth1(Col, RowData, Cell),
     Cell = Piece, % Ensure this cell belongs to the player
     capture_possible(Board, Player, Row, Col, Dir). % Check if a capture is possible in the given direction
-
 
 % capture_possible(+Board, +Player, +Row, +Col, -Direction)
 capture_possible(Board, Player, Row, Col, Direction) :-
