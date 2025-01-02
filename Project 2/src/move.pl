@@ -45,12 +45,12 @@ choose_move(GameState, computer(2), BestMove) :-
         Value is PlayerValue - OpponentValue), % Calculate the net value of the move
         ScoredMoves),
     
-    max_member((MaxValue, _, _, ScoredMoves), % Find the maximum value.
+    max_member((MaxValue, _, _), ScoredMoves), % Find the maximum value.
     findall((OpponentValue, Move), member((MaxValue, OpponentValue, Move), ScoredMoves), BestMoves),  % Collect all moves with the maximum value.
     
     min_member((MinOpponentValue, _), BestMoves), % Find the minimum OpponentMoveCount among the best moves
-    findall(Move, member((MinOpponentMoveCount, Move), BestMoves), FinalMoves), % Collect all moves with the same MinOpponentMoveCount
-    
+    findall(Move, member((MinOpponentValue, Move), BestMoves), FinalMoves), % Collect all moves with the same MinOpponentMoveCount
+
     random_member(BestMove, FinalMoves). % Select a random move among the final candidates
 
 % Executes a move and updates the game state
