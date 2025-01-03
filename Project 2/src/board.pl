@@ -1,5 +1,4 @@
 :- module(board, [initial_state/2, display_game/1]).
-:- use_module('validation.pl').
 :- use_module('utilities.pl').
 
 % Initializes the game state
@@ -16,11 +15,8 @@ initial_state([_, _, Rule], game_state(Board, player1, Rule)) :-
 display_game(game_state(Board, Player, Rule)) :-
     player_profile(Player, Profile),
 
-    valid_moves(game_state(Board, Player, _), Moves),
-    length(Moves, MoveCount),
-
     write('-------------------------------------------------------------------------------------'), nl,
-    write(Profile), write(' | Possible moves: '), write(MoveCount), nl,
+    write(Profile), nl,
     write('-------------------------------------------------------------------------------------'), nl,
     display_board(Board, Rule), nl.
 
@@ -44,15 +40,11 @@ display_board([Row5, Row4, Row3, Row2, Row1], 1) :-
 display_board([Row5, Row4, Row3, Row2, Row1], 2) :-    
     write('5 '), print_row(Row5, 2), nl,
     write('                           '), nl,
-    write('                           '), nl,
     write('4 '), print_row(Row4, 2), nl,
-    write('                           '), nl,
     write('                           '), nl,
     write('3 '), print_row(Row3, 2), nl,
     write('                           '), nl,
-    write('                           '), nl,
     write('2 '), print_row(Row2, 2), nl,
-    write('                           '), nl,
     write('                           '), nl,
     write('1 '), print_row(Row1, 2), nl,
     write('  1   2   3   4   5   6   7   8   9').

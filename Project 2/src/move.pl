@@ -56,8 +56,8 @@ choose_move(GameState, computer(2), BestMove) :-
 
 % Executes a move and updates the game state
 % move(+GameState, +Move, -NewGameState)
-move(game_state(Board, Player, _), move(Row, Col, Dir), game_state(NewBoard, NextPlayer, _)) :-
-    valid_moves(game_state(Board, Player, _), Moves), % Check if move is valid
+move(game_state(Board, Player, Rule), move(Row, Col, Dir), game_state(NewBoard, NextPlayer, Rule)) :-
+    valid_moves(game_state(Board, Player, Rule), Moves), % Check if move is valid
     member(move(Row, Col, Dir), Moves), % Ensure the move is valid
 
     player_piece(Player, Piece), % Get the player's piece
@@ -84,15 +84,15 @@ capture_move(Board, Row, Col, Dir, Piece, NewBoard) :-
     ).
 
 % value(+GameState, +Player, -Value)
-value(game_state(Board, _, _), Player, Value) :-
+value(game_state(Board, _, Rule), Player, Value) :-
     % Get opponent
     switch_player(Player, Opponent),
 
     % Calculate valid moves for the current player and opponent
-    valid_moves(game_state(Board, Player, _), PlayerMoves),
+    valid_moves(game_state(Board, Player, Rule), PlayerMoves),
     length(PlayerMoves, PlayerMoveCount),
 
-    valid_moves(game_state(Board, Opponent, _), OpponentMoves),
+    valid_moves(game_state(Board, Opponent, Rule), OpponentMoves),
     length(OpponentMoves, OpponentMoveCount),
 
     % Compute the difference

@@ -64,8 +64,8 @@ opponent_board_piece(player1, 'X').
 opponent_board_piece(player2, 'O').
 
 % Player Type
-get_player_type(GameConfig, player1, Player1Type) :- member(player1:Player1Type, GameConfig).
-get_player_type(GameConfig, player2, Player2Type) :- member(player2:Player2Type, GameConfig).
+get_player_type([Player1Type, _, _], player1, Player1Type).
+get_player_type([_, Player2Type, _], player2, Player2Type).
 
 convert_row(1, 5).
 convert_row(2, 4).

@@ -17,9 +17,9 @@ display_main_menu :-
     write(' \\___) (_____) (____) (____) (__)(__) (__)   (___/ (____)'), nl,
     write('-------------------------------------------------------------------------------------'), nl,
     write('Mode selection '), nl,
-    write('1. Man Vs Man'), nl,
-    write('2. Man Vs Bot'), nl,
-    write('3. Bot Vs Man'), nl,
+    write('1. Player Vs Player'), nl,
+    write('2. Player Vs Bot'), nl,
+    write('3. Bot Vs Player'), nl,
     write('4. Bot Vs Bot'), nl,
     write('5. Exit'), nl,
     write('-------------------------------------------------------------------------------------'), nl,
@@ -37,8 +37,8 @@ handle_menu_option(1) :-
     select_rule(Rule),
     setup_game(human, human, Rule).
 handle_menu_option(2) :-
-    select_rule(Rule),
     select_difficulty(Difficulty, ''),
+    select_rule(Rule),
     setup_game(human, computer(Difficulty), Rule).
 handle_menu_option(3) :-
     select_difficulty(Difficulty, ''),
@@ -89,7 +89,7 @@ select_rule(Rule) :-
 
 % Sets up the game configuration and starts the initial state
 setup_game(Player1Type, Player2Type, Rule) :-
-    GameConfig = [player1:Player1Type, player2:Player2Type, Rule],
+    GameConfig = [Player1Type, Player2Type, Rule],
     initial_state(GameConfig, GameState),
     !, % Prevent fallback to other clauses
     game_loop(GameConfig, GameState).
