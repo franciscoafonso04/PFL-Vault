@@ -1,22 +1,16 @@
-:- module(utilities, [valid_direction/1, diagonal_allowed/4, within_bounds/2, next_position/5, switch_player/2, player_piece/2, opponent_piece/2, get_player_type/3, current_player/2, player_profile/2, convert_row/2]).
+:- module(utilities, [valid_direction/4, within_bounds/2, next_position/5, current_player/2, switch_player/2, player_piece/2, opponent_piece/2, player_profile/2, get_player_type/3, convert_row/2]).
+:- use_module(library(lists)).
 
-% Valid directions for movement
-valid_direction(north).
-valid_direction(south).
-valid_direction(east).
-valid_direction(west).
-valid_direction(northeast).
-valid_direction(northwest).
-valid_direction(southeast).
-valid_direction(southwest).
+valid_direction(1, Row, Col, Dir) :-
+    (
+        member(Dir, [north, south, west, east])
+    ;
+        member(Dir, [northeast, northwest, southeast, southwest]),
+        (Row + Col) mod 2 =:= 0
+    ).
 
-% Rule 2 (Easy Rule): All diagonals are allowed everywhere
-diagonal_allowed(2, _, _, _).
-
-% Rule 1 (Normal Rule): Diagonals are allowed only if (Row + Col) is even
-diagonal_allowed(1, Row, Col, Dir) :-
-    member(Dir, [northeast, northwest, southeast, southwest]), % Ensure it's a diagonal direction
-    (Row + Col) mod 2 =:= 0.
+valid_direction(2, _, _, Dir) :-
+        member(Dir, [north, south, west, east, northeast, northwest, southeast, southwest]).
 
 within_bounds(Row, Col) :-
     Row > 0, Row =< 5, % Check row bounds
@@ -59,10 +53,6 @@ opponent_piece(player2, white).
 player_profile(player1, 'Player 1 - O').
 player_profile(player2, 'Player 2 - X').
 
-% Opponent Piece Colors
-opponent_board_piece(player1, 'X').
-opponent_board_piece(player2, 'O').
-
 % Player Type
 get_player_type([Player1Type, _, _], player1, Player1Type).
 get_player_type([_, Player2Type, _], player2, Player2Type).
@@ -72,3 +62,4 @@ convert_row(2, 4).
 convert_row(3, 3).
 convert_row(4, 2).
 convert_row(5, 1).
+convert_row(_, _) :- false.

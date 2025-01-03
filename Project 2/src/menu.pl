@@ -38,7 +38,6 @@ handle_menu_option(4, computer(Difficulty_1), computer(Difficulty_2), Rule) :-
     select_rule(Rule).
 handle_menu_option(5) :-
     write('Goodbye!'), nl, !.
-handle_menu_option(_) :- nl, display_main_menu.
 
 % Displays a menu to select difficulty level for the AI
 select_difficulty(Difficulty, Computer) :-
