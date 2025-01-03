@@ -1,16 +1,5 @@
 % Module declaration and exported predicates
-:- module(utilities, [
-    valid_direction/4,
-    within_bounds/2,
-    next_position/5,
-    current_player/2,
-    switch_player/2,
-    player_piece/2,
-    opponent_piece/2,
-    player_profile/2,
-    get_player_type/3,
-    convert_row/2
-]).
+:- module(utilities, [valid_direction/4, within_bounds/2, next_position/5, current_player/2, switch_player/2, player_piece/2, opponent_piece/2, player_profile/2, get_player_type/3, convert_row/2]).
 :- use_module(library(lists)).  % For list operations
 
 % -------------------------------------------------------------------------------------------------
@@ -81,7 +70,8 @@ player_piece(player1, white).
 player_piece(player2, black).
 
 % opponent_piece(+Player, -Piece)
-% Maps a player to their opponent's piece color.opponent_piece(player1, black).
+% Maps a player to their opponent's piece color.
+opponent_piece(player1, black).
 opponent_piece(player2, white).
 
 % player_profile(+Player, -Profile)
