@@ -51,7 +51,7 @@ opponent_piece(player2, white).
 
 % Player Piece Colors
 player_profile(player1, 'Player 1 - O').
-player_profile(player2, 'Player 2 - X').
+player_profile(player2, 'Player 2 - U').
 
 % Player Type
 get_player_type([Player1Type, _, _], player1, Player1Type).

@@ -52,7 +52,7 @@ display_board([Row5, Row4, Row3, Row2, Row1], 2) :-
 
 % Helper predicate to print a single cell with optional color
 print_cell(black, ColorCode) :-
-    put_code(27), write(ColorCode), write('X'), put_code(27), write('[0m').
+    put_code(27), write(ColorCode), write('U'), put_code(27), write('[0m').
 print_cell(white, ColorCode) :-
     put_code(27), write(ColorCode), write('O'), put_code(27), write('[0m').
 print_cell(empty, _) :-
