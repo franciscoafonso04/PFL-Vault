@@ -23,13 +23,23 @@ game_loop(GameConfig, GameState) :-
 
     % Check if the game is over
     (   game_over(GameState, Winner)
-    ->  write('Game over! Winner: '), write(Winner), halt, !  % Announce the winner and stop the loop
+    ->  write('Game over! Winner: '), write(Winner), nl, 
+        write('Go to the "menu." or "exit." the game'),
+        repeat, % Start repeat loop
+        read(Input),
+        (   Input = menu ->
+            !, play 
+        ;   Input = exit -> 
+            !, halt
+        ;   write('Invalid option. Please try again'),
+            fail % Restart the repeat loop
+        )
     ;   % Otherwise, continue the game
         current_player(GameState, Player),  % Get the current player (player1 or player2)
         get_player_type(GameConfig, Player, PlayerType),  % Get the player type from GameConfig
         choose_move(GameState, PlayerType, Move),
         move(GameState, Move, NewGameState),
-        game_loop(GameConfig, NewGameState)
+        game_loop(GameConfig, NewGameState) % Recursively call game_loop with the new state
     ).
 
 % Determines if the game is over and identifies the winner, should change to more declarative solution after solving more important things

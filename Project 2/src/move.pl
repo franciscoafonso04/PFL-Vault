@@ -7,7 +7,7 @@
 % choose_move(+GameState, +Level, +Move)
 % Gets the next move for the current player
 choose_move(GameState, human, Move) :-
-    write('Enter your move as "move(row,col,dir)." or "exit." to quit: '),
+    write('Enter your move as "move(row,col,dir)." or "exit." to quit'),
     repeat,
     read(Input),
     (   Input == exit ->

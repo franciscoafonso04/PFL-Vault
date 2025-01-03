@@ -46,7 +46,7 @@ select_difficulty(Difficulty, Computer) :-
     write('1. Level 1'), nl,
     write('2. Level 2'), nl,
     write('-------------------------------------------------------------------------------------'), nl,
-    write('Choose an option: '),
+    write('Choose an option'),
     repeat,
     read(DifOption),
     (   member(DifOption, [1, 2]) -> Difficulty = DifOption
@@ -61,7 +61,7 @@ select_rule(Rule) :-
     write('1. Normal Mode - Fanorona Board'), nl,
     write('2. Free Mode - Omnidirectional'), nl,
     write('-------------------------------------------------------------------------------------'), nl,
-    write('Choose an option: '),
+    write('Choose an option'),
     repeat,
     read(RuleOption),
     (   member(RuleOption, [1, 2]) -> Rule = RuleOption
