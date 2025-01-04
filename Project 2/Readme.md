@@ -45,7 +45,7 @@ The game includes a custom font (`font.ttf`) for improved visual appeal. Follow 
 
 ---
 
-### **Steps for Linux**
+### **Installation Steps for Linux**
 
 1. Extract the ZIP file containing the project:
    ```bash
@@ -68,7 +68,7 @@ The game includes a custom font (`font.ttf`) for improved visual appeal. Follow 
    play.
    ```
 
-### **Steps for Windows**
+### **Installation Steps for Windows**
 
 1. Extract the ZIP file containing the project to a folder, such as `PFL_TP2_T01_Collapse_5`.
 2. Open the **SICStus Prolog** application.
@@ -80,9 +80,11 @@ The game includes a custom font (`font.ttf`) for improved visual appeal. Follow 
 
 **With these steps, both the font and the game will be properly installed and executed on your system.**
 
+---
+
 ## **Description of the Game**
 
-**Collapse** is a strategic two-player board game where the primary objective is to outmaneuver your opponent by capturing their pieces or forcing them into a position where they cannot make a valid move. The game is played on a **9x5 grid board**, traditionally associated with the Fanorona board design, and involves capturing opponent pieces through calculated collisions.
+**Collapse** is a strategic two-player board game where the primary objective is to outmaneuver your opponent by capturing their pieces or forcing them into a position where they cannot make a valid move. The game is played on a **9x5 grid board**, traditionally associated with the Fanorona board design, and involves capturing opponent pieces through collisions.
 
 ### **Game Rules**
 
@@ -90,22 +92,6 @@ The game includes a custom font (`font.ttf`) for improved visual appeal. Follow 
    - The game starts with pieces placed around the perimeter of a 9x5 board.
    - Players decide if they want to play first (**white**) or second (**black**).
    - In **Player vs Bot** mode, the player always plays first (white), while in **Bot vs Player** mode, the player takes the second turn (black).
-
-Aqui está uma versão revisada e ligeiramente ampliada para a descrição do jogo, com informações adicionais que podem ser úteis:
-
----
-
-## **Description of the Game**
-
-**Collapse** is a strategic two-player board game where the primary objective is to outmaneuver your opponent by capturing their pieces or forcing them into a position where they cannot make a valid move. The game is played on a **9x5 grid board**, traditionally associated with the Fanorona board design, and involves capturing opponent pieces through calculated collisions.
-
-### **Game Rules**
-
-1. **Setup**:
-   - The board is initialized with pieces placed along the perimeter of the grid.
-   - Players decide their colors (white or black).
-   - In **Human vs Computer** mode, the human player can choose their color during setup.
-   - The **White** player always moves first, and turns alternate between the two players.
 
 2. **Movement**:
    - A piece can move in one of eight directions: north, south, east, west, northeast, northwest, southeast, or southwest.
@@ -130,7 +116,6 @@ Aqui está uma versão revisada e ligeiramente ampliada para a descrição do jo
    - The game ends when a player is unable to make a valid move on their turn.
    - This includes scenarios where all of a player's pieces have been captured.
    - The remaining player is declared the winner.
-   - In case neither player can capture, the game ends in a stalemate.
 
 ### **Game Objective**
 
@@ -138,12 +123,14 @@ The main objective is to strategically position your pieces while capturing your
 
 ### **Links for Reference**
   - [Official Collapse Information from Kanare Abstract](https://kanare-abstract.com/en/pages/collapse)
-  - [PDF of Rules (from Kanare Kato)](https://example.com/rules.pdf)
+  - [PDF of Rules (from Kanare Kato)](https://cdn.shopify.com/s/files/1/0578/3502/8664/files/Collapse_EN.pdf?v=1713463846)
   - [Fanorona Board Information](https://en.wikipedia.org/wiki/Fanorona)
+
+---
 
 ## **Considerations for Game Extensions**  
 
-During the development of **Collapse**, we explored various ways to provide flexibility and adaptability in gameplay. This led to the implementation of **optional rules**, allowing players to choose the complexity of the game while maintaining its strategic essence.  
+During the development of **Collapse**, we explored various ways to provide flexibility and adaptability in gameplay. This led to the implementation of **optional rules**, allowing players to choose the complexity of the game while maintaining its essence.  
 
 ### **1. Normal Rule**  
 In the standard mode, diagonal moves are restricted to cells where the sum of the coordinates `(X + Y)` is an even number. This restriction reflects the design of the Fanorona board, where diagonal connections are valid only in specific positions. This rule challenges players to plan their moves strategically while working within these constraints, adding depth and complexity to the gameplay.  
@@ -152,17 +139,19 @@ In the standard mode, diagonal moves are restricted to cells where the sum of th
 Initially, the game was developed using what is now called the "easy rule," allowing diagonal moves on any cell regardless of the coordinate parity. However, during the evaluation of potential extensions, we discovered that this rule was inconsistent with the Fanorona board's standard design. Despite this realization, the easy rule was retained as a beginner-friendly option, providing a simpler and more accessible gameplay experience for novice players.  
 
 ### **Variable Board Sizes**  
-The possibility of introducing variable board sizes was considered but ultimately deemed unnecessary. The fixed 9x5 board size ensures a balanced pre-defined arrangement of pieces, central to the game's strategic nature. Expanding the board size would require significant adjustments to the initial setup and could distort the gameplay, detracting from the original intent and balance of the game.  
+The possibility of introducing variable board sizes was considered but deemed unnecessary. The fixed 9x5 board size ensures a pre-defined arrangement of pieces, central to the game's strategy. Expanding the board size would require significant adjustments to the initial setup and could distort the gameplay, moving away from the original intent of the game.  
 
 By addressing these considerations, we aimed to make **Collapse** both engaging for experienced players and approachable for those new to the game.
 
+---
+
 ## **Game Logic**
 
-The implementation of **Collapse** in Prolog reflects careful design decisions to ensure a robust, flexible, and user-friendly gaming experience. The following subsections describe the representation and handling of game configuration, game state, move representation, and user interaction.
+The implementation of **Collapse** in Prolog reflects careful design decisions to ensure a robust and user-friendly gaming experience. The following subsections describe the representation and handling of game configuration, game state, move representation, and user interaction.
 
 ### **Game Configuration Representation**
 The game configuration represents the setup information necessary to initialize the game. It includes the following details:
-- **Player Types**: Indicates whether each player is a human or a computer (e.g., `human`, `computer(Level)`).
+- **Player Types**: Indicates whether each player is a human or a computer/bot (e.g., `human`, `computer(Level)`).
 - **Game Rule**: Specifies whether the game uses the **Normal Rule** (restricted diagonals) or **Easy Rule** (diagonals allowed anywhere).
 
 Internally, this configuration is stored as a list:
@@ -198,27 +187,33 @@ game_state(Board, CurrentPlayer, Rule)
 
 **Examples**:
 - **Initial State**:
-  ```prolog
-  game_state(Board, player1, 1)
-  ```
+   ```prolog
+   game_state(Board, player1, 1)
+   ```
+
+  ![Initial Board](files/initial_board.png)
+
+---
+
 - **Intermediate State**:
-  After a few moves, the board and current player might look like:
-  ```prolog
-  [
-      [black, white, empty, white, black, white, black, white, black],
-      [white, empty, empty, empty, empty, empty, empty, empty, white],
-      [empty, empty, empty, empty, black, empty, empty, empty, empty],
-      [black, empty, empty, empty, empty, empty, empty, empty, black],
-      [white, black, white, black, white, black, white, black, white]
-  ],
-  player2,
-  1
-  ```
+   After a few moves, the board and current player might look like:
+
+   ```prolog
+   game_state(Board, player2, 1)
+   ```
+
+  ![Initial Board](files/intermediate_board.png)
+
+---
+
 - **Final State**:
-  When a player cannot make a valid move:
-  ```prolog
-  game_state(Board, player2, 1)
-  ```
+   When a player cannot make a valid move, game over and the other player is declared as the winner.
+
+   ```prolog
+   game_over(game_state(Board, player2, 1), player1)
+   ```
+
+   ![Initial Board](files/final_board.png)
 
 ---
 
@@ -237,7 +232,7 @@ The `move/3` predicate uses this representation to:
 3. Switch to the next player.
 
 For example:
-- A move from row 3, column 5, in the north direction:
+- A move from the piece in row 3, column 5, in the north direction:
   ```prolog
   move(3, 5, north)
   ```
@@ -249,12 +244,12 @@ The game features a structured menu system and user-friendly interaction methods
 
 #### **Menu System**:
 The menu is implemented using `display_main_menu/3`, which allows players to:
-1. Choose the game mode (e.g., `Player vs Player`, `Player vs Computer`).
+1. Choose the game mode (e.g., `Player vs Player`, `Player vs Bot`).
 2. Select the rule set (`Normal` or `Easy`).
-3. Set the computer difficulty level when applicable (`Level 1` or `Level 2`).
+3. Set the computer/bot difficulty level when applicable (`Level 1` or `Level 2`).
 
 #### **Input Validation**:
-Player input is validated to ensure it adheres to the game's rules and format:
+Player input is validated to ensure it respects the game's rules and format:
 - **Move Input**: Players are prompted to input a move in the format:
   ```prolog
   move(row, col, dir).
@@ -269,35 +264,55 @@ The program uses a combination of recursive calls and `repeat` loops to manage i
 - Incorrect menu selections lead to a re-prompt for valid input.
 - Invalid moves in the game prompt the player to try again without disrupting gameplay.
 
+---
+
 ## **Conclusions**
 
-The development of **Collapse** has been a rewarding and challenging process that allowed us to deepen our understanding of Prolog and abstract strategy game mechanics. The project successfully captures the essence of the game **Collapse**, with a clear and engaging implementation of its rules and mechanics.
+The development of **Collapse** has been a rewarding and challenging process that allowed us to improve our Prolog programming skills and abstract strategy game mechanics. 
+The project successfully captures the essence of the game **Collapse**, with a clear implementation of its rules and mechanics.
 
 ### **Achievements**
 1. **Rule Customization**: The implementation of both the **Normal Rule** and the **Easy Rule** offers flexibility for players of different skill levels.
-2. **AI Implementation**: Two levels of AI (random and strategic) provide challenging gameplay for solo players while showcasing effective use of Prolog's capabilities.
+2. **AI Implementation**: Two levels of AI (random and strategic greedy) provide challenging gameplay for solo players while showing effective use of Prolog's capabilities.
 3. **Dynamic Game Flow**: The integration of robust input validation and a structured menu system ensures a seamless user experience.
 4. **Visual Appeal**: The inclusion of custom fonts and board styling enhances the aesthetic appeal of the game.
 
----
-
 ### **Limitations**
-1. **Fixed Board Size**: The game is limited to the 9x5 board configuration. Although this size is integral to the game’s balance, the inability to explore other configurations might reduce replayability for some players.
-2. **AI Complexity**: While the Level 2 AI employs strategic decision-making, it does not incorporate advanced heuristics or machine learning techniques that could further enhance its competitiveness.
-3. **User Interface**: The game remains text-based, which might deter players who are accustomed to graphical user interfaces.
-4. **Input Handling**: Input validation, though robust, could be more forgiving in guiding players who provide incorrect formats (e.g., allowing partial inputs or hinting corrections).
-
----
+1. **Fixed Board Size**: The game is limited to the 9x5 board configuration given the size is integral to the game's balance.
+2. **AI Complexity**: While the Level 2 AI employs strategic decision-making, it does not incorporate level 3 AI.
+3. **User Interface**: The game is text-based, which might players who are accustomed to graphical user interfaces.
 
 ### **Future Improvements**
-1. **Variable Board Sizes**: Introducing customizable board sizes with balanced initial configurations could increase replayability and allow for new strategic dynamics.
-2. **Enhanced AI**: Developing a more advanced AI with predictive capabilities and heuristics could improve the challenge for experienced players.
-3. **Graphical Interface**: Adding a GUI would make the game more accessible to a broader audience and improve user engagement.
-4. **Multiplayer Mode**: Implementing online multiplayer functionality could expand the reach of the game and offer new gameplay experiences.
-5. **Rule Customization**: Allowing players to define their own rules could make the game even more versatile and appealing to different audiences.
-6. **Game Analytics**: Introducing gameplay statistics (e.g., move history, win rates) could provide players with insights and enhance their experience.
+1. **Enhanced AI**: Developing a more advanced AI with predictive capabilities and heuristics could improve the challenge for experienced players.
+2. **Graphical Interface**: Adding a GUI would make the game more accessible to a larger audience and improve user engagement.
+3. **Rule Customization**: Allowing players to define their own rules could make the game even more versatile and appealing to different audiences.
+4. **Game Analytics**: Introducing gameplay statistics (e.g., move history, win rates) could provide players with insights and improve their experience.
 
 ---
 
-### **Final Thoughts**
-**Collapse** provides a faithful and engaging implementation of the original game, balancing strategic depth and accessibility. Despite its limitations, the program sets a solid foundation for future development and exploration, offering opportunities for growth in AI sophistication, visual design, and gameplay dynamics.
+## **Bibliography**
+
+During the development of **Collapse**, we consulted several resources to ensure the implementation was similar to the original game while using good programming practices. Below is a list of the references used:
+
+### **Moodle Resources**
+
+Used Prolog Lectures Slides available on PFL Moodle in order to implement good programming practices across the project.
+
+### **Wikipedia Resources**
+- **Fanorona Board Design**: Information about the Fanorona board was referenced to ensure accurate adaptation of diagonal move restrictions.  
+  - [Fanorona Wikipedia Page](https://en.wikipedia.org/wiki/Fanorona)
+
+### **Web Resources**
+- **Collapse Game Rules**: Official information for the game mechanics and rules.  
+  - [Kanare Abstract - Official Collapse Page](https://kanare-abstract.com/en/pages/collapse)
+  - [PDF of Rules (from Kanare Abstract)](https://cdn.shopify.com/s/files/1/0578/3502/8664/files/Collapse_EN.pdf?v=1713463846)  
+
+### **Tools and AI Assistance**
+- **ChatGPT (OpenAI)**: Assisted with AI programming logic and suggestions for future improvements for our developed game.
+  - **Queries Used**:
+    - "Suggest future improvements for our game."
+    - "Suggest improvements for the level 2 AI bot."
+
+
+
+
