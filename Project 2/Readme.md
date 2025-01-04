@@ -2,33 +2,101 @@
 
 ## Game and Group
 
-This project implements the **Collapse** board game using Prolog. The group, **Collapse_5**, from class T01, includes **Alexandre Gonçalves Ramos** (up202208028) and **Francisco Miguel Pires Afonso** (up202208115), each contributing 50%.
+This project focuses on implementing the **Collapse** board game using Prolog. The group, **Collapse_5**, from class T01, consists of two members: **Alexandre Gonçalves Ramos** (student number up202208028) and **Francisco Miguel Pires Afonso** (student number up202208115). Both members contributed equally to the project, with a 50% contribution each.
 
-Francisco initiated the game logic and started the Computer functionality, while Alexandre refined and finalized the logic, improved the board display, and optimized input handling. Both worked collaboratively, reviewing each other's contributions to deliver a cohesive and polished final product.
+The project was a collaborative effort where both members, Francisco and Alexandre, equally contributed to its success. Francisco initiated the core game logic and began developing the Computer functionality, while Alexandre expanded on this foundation, refining and finalizing the game logic. Alexandre also focused on enhancing the board display and improving input handling, while Francisco implemented the rules and contributed further to refining the Computer logic. Both members actively reviewed and collaborated on each other's work, ensuring that the final product was cohesive and polished.
 
 ## Installation and Execution
 
-### Prerequisites
-- Install **SICStus Prolog 4.9**.
+### SICStus Prolog Installation
+
+#### License Information
+To install SICStus Prolog, use the following license details:
+- **Site Name**: `student.fe.up.pt`
+- **License Codes**:
+  - **Linux**: `4fa3-asxr-nobo-c5bd-t6k2`
+  - **Windows**: `a5dg-asxr-nobo-b33p-ue2q`
+  - **macOS**: `6edg-asxr-nobo-bgb5-fz66`
+
+#### Linux Installation
+1. Download the Linux package from the [SICStus Downloads](https://sicstus.sics.se/download4.html).
+2. Extract the package:
+   ```bash
+   tar -xvzf sicstus-X.Y.Z.tar.gz
+   ```
+3. Run the installer:
+   ```bash
+   ./InstallSICStus
+   ```
+4. Enter license information:
+   ```bash
+   splm -i student.fe.up.pt
+   splm -a sicstus4.9_linux permanent 4fa3-asxr-nobo-c5bd-t6k2
+   ```
+
+#### Windows Installation
+1. Download the Windows installer from the [SICStus Downloads](https://sicstus.sics.se/download4.html).
+2. Run the `.exe` file and follow the setup instructions.
+3. Enter the license details during installation.
+
+#### Installing Windows Version on Linux (Wine)
+1. Install Wine:
+   ```bash
+   sudo apt install wine
+   ```
+2. Create a Wine prefix and configure Wine:
+   ```bash
+   export WINEPREFIX="$HOME/.local/sicstus-prolog"
+   winecfg
+   ```
+3. Download the Windows installer and install using:
+   ```bash
+   wine InstallSICStus-4.9.0-x64-VC15.exe
+   ```
+4. Run SICStus:
+   ```bash
+   export WINEPREFIX="$HOME/.local/sicstus-prolog"
+   wine "C:\Program Files\SICStus Prolog VC15 4.9.0\bin\spwin.exe"
+   ```
+
+For more details, visit the [SICStus website](https://sicstus.sics.se).
+
+---
 
 ### Font Installation
-To install the custom font (`font.ttf`):
-- **Linux**: Copy the font to `~/.fonts/` and refresh the font cache using `fc-cache`.
-- **Windows**: Right-click the font file and choose **Install**.
+- **Linux**: Copy `font.ttf` to `~/.fonts/` and refresh using `fc-cache -f -v`.
+- **Windows**: Right-click on `font.ttf` and select **Install**.
+
+---
 
 ### Game Installation
-1. Extract the project ZIP file (`PFL_TP2_T01_Collapse_5.zip`).
-2. Navigate to the `src` folder.
-3. Launch **SICStus Prolog** and consult the `game.pl` file.
-4. Start the game using `play.` if the menu does not load automatically.
 
-For Linux, use terminal commands:
-- Extract: `unzip PFL_TP2_T01_Collapse_5.zip`
-- Navigate: `cd PFL_TP2_T01_Collapse_5/src`
-- Launch SICStus: `sicstus`
+#### Linux
+1. Extract the ZIP file:
+   ```bash
+   unzip PFL_TP2_T01_Collapse_5.zip
+   ```
+2. Navigate to `src`:
+   ```bash
+   cd PFL_TP2_T01_Collapse_5/src
+   ```
+3. Launch SICStus:
+   ```bash
+   sicstus
+   ```
+4. Load the game:
+   ```prolog
+   [game].
+   play.
+   ```
 
-For Windows:
-- Open SICStus, choose **File > Consult**, and load `game.pl` from the `src` folder.
+#### Windows
+1. Extract the ZIP file into a folder (e.g., `PFL_TP2_T01_Collapse_5`).
+2. Open SICStus and consult `game.pl` in the `src` folder.
+3. Start the game with:
+   ```prolog
+   play.
+   ```  
 
 ## Description
 
@@ -36,13 +104,24 @@ For Windows:
 
 ### Game Rules
 
-1. **Setup**: Pieces are placed around the board’s perimeter and Players choose to play as **white** (first) or **black** (second). In **Player vs Bot**, the player is always **white**; in **Bot vs Player**, the player is **black**.
+1. **Setup**:
+   - Pieces are placed around the board’s perimeter.
+   - Players choose to play as **white** (first) or **black** (second).
+   - In **Player vs Bot**, the player is always **white**; in **Bot vs Player**, the player is **black**.
 
-2. **Movement**: Pieces move in cardinal (north, east, south, west) or ordinal (northeast, southeast, southwest, northwest) directions. Movement depends on the **rule**: with normal rule, Ordinal moves are limited by the lines of the Faronara Board, on the other side, **Easy Rule**: Ordinal moves are allowed on all cells.
+2. **Movement**:
+   - Pieces move in cardinal (**north, east, south, west**) or ordinal (**diagonal**) directions.
+   - Movement depends on the **rule**:
+     - **Normal Rule**: Diagonal moves are restricted to cells where `(X + Y)` is even.
+     - **Easy Rule**: Diagonal moves are allowed on all cells.
 
-3. **Capturing**: A move must capture exactly one opponent piece and the capturing piece stops one space before the captured piece, which is removed from the board.
+3. **Capturing**:
+   - A move must capture exactly one opponent piece.
+   - The capturing piece stops one space before the captured piece, which is removed from the board.
 
-4. **Game End**: The game ends when a player has no valid moves or no pieces left and the other player is declared the winner.
+4. **Game End**:
+   - The game ends when a player has no valid moves or no pieces left.
+   - The other player is declared the winner.
 
 ### Links for Reference
   - [Collapse Official Page](https://kanare-abstract.com/en/pages/collapse)
