@@ -83,9 +83,9 @@ game_loop(GameConfig, GameState) :-
 
 % game_over(+GameState, -Winner)
 
-% Determines if the game has ended and identifies the winner or if the game ends in a draw.
+% Determines if the game has ended and identifies the winner.
 % This predicate evaluates the current state of the game to decide if there are no more valid moves for
-% one or both players, thereby ending the game.
+% each of the players, thereby ending the game.
 
 % Receives:
 %   +GameState: The current state of the game, represented as game_state(Board, Player, Rule).
@@ -95,24 +95,15 @@ game_loop(GameConfig, GameState) :-
 %   -Winner: The result of the game:
 %       - `player1`: Player 1 is the winner.
 %       - `player2`: Player 2 is the winner.
-%       - `draw`: No valid moves for either player.
 
 % Functionality:
 % - Checks if the current player has no valid moves:
-%     - If true, switches to the opponent to check their moves.
-% - If neither player has valid moves, the game ends in a draw.
-% - If only one player has valid moves, they are declared the winner.
+%     - If true, the opponent wins.
 % - Utilizes `valid_moves/2` to determine if a player can make any moves.
 
 % Workflow:
 % 1. Use `valid_moves/2` to check the current player's possible moves.
-% 2. If no moves are available for the current player, switch to the opponent.
-% 3. If neither player can make a move, declare a draw.
-% 4. If the opponent can make moves, they are declared the winner.
-
-% Notes:
-% - The game ends when neither player has any valid moves.
-% - The active player loses if they cannot make a valid move, and their opponent can.
+% 2. If no moves are available for the current player, the opponent wins.
 
 % Related Predicates:
 % - `valid_moves/2`: Determines available moves for a player.
