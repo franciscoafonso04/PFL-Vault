@@ -10,14 +10,6 @@ The project was a collaborative effort where both members, Francisco and Alexand
 
 ### SICStus Prolog Installation
 
-#### License Information
-To install SICStus Prolog, use the following license details:
-- **Site Name**: `student.fe.up.pt`
-- **License Codes**:
-  - **Linux**: `4fa3-asxr-nobo-c5bd-t6k2`
-  - **Windows**: `a5dg-asxr-nobo-b33p-ue2q`
-  - **macOS**: `6edg-asxr-nobo-bgb5-fz66`
-
 #### Linux Installation
 1. Download the Linux package from the [SICStus Downloads](https://sicstus.sics.se/download4.html).
 2. Extract the package:
@@ -28,12 +20,8 @@ To install SICStus Prolog, use the following license details:
    ```bash
    ./InstallSICStus
    ```
-4. Enter license information:
-   ```bash
-   splm -i student.fe.up.pt
-   splm -a sicstus4.9_linux permanent 4fa3-asxr-nobo-c5bd-t6k2
-   ```
-
+4. Enter license information.
+  
 #### Windows Installation
 1. Download the Windows installer from the [SICStus Downloads](https://sicstus.sics.se/download4.html).
 2. Run the `.exe` file and follow the setup instructions.
@@ -112,7 +100,7 @@ To enhance the visual appeal of the game, you can install the custom font (`font
 #### Windows
 1. Extract the ZIP file into a folder (e.g., `PFL_TP2_T01_Collapse_5`).
 2. Open SICStus and consult `game.pl` in the `src` folder.
-3. Start the game with:
+3. If the game does not start automatically, start the game with:
    ```prolog
    play.
    ```  
@@ -250,8 +238,3 @@ Developing **Collapse** provided a valuable opportunity to refine our Prolog ski
 ### Tools and Assistance
 - **ChatGPT (OpenAI)**: Assisted in refining AI logic and suggesting future enhancements.
   - Queries: "Improve Prolog AI logic for strategic gameplay." and "Suggest future features for a Prolog board game."
-
-
-
-
-
