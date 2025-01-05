@@ -13,10 +13,12 @@ The project was a collaborative effort where both members, Francisco and Alexand
 #### Linux Installation
 1. Download the Linux package from the [SICStus Downloads](https://sicstus.sics.se/download4.html).
 2. Extract the package:
+
    ```bash
    tar -xvzf sicstus-X.Y.Z.tar.gz
    ```
 3. Run the installer:
+
    ```bash
    ./InstallSICStus
    ```
@@ -29,19 +31,23 @@ The project was a collaborative effort where both members, Francisco and Alexand
 
 #### Installing Windows Version on Linux (Wine)
 1. Install Wine:
+
    ```bash
    sudo apt install wine
    ```
 2. Create a Wine prefix and configure Wine:
+
    ```bash
    export WINEPREFIX="$HOME/.local/sicstus-prolog"
    winecfg
    ```
 3. Download the Windows installer and install using:
+
    ```bash
    wine InstallSICStus-4.9.0-x64-VC15.exe
    ```
 4. Run SICStus:
+
    ```bash
    export WINEPREFIX="$HOME/.local/sicstus-prolog"
    wine "C:\Program Files\SICStus Prolog VC15 4.9.0\bin\spwin.exe"
@@ -80,18 +86,22 @@ To enhance the visual appeal of the game, you can install the custom font (`font
 
 #### Linux
 1. Extract the ZIP file:
+
    ```bash
    unzip PFL_TP2_T01_Collapse_5.zip
    ```
 2. Navigate to `src`:
+
    ```bash
    cd PFL_TP2_T01_Collapse_5/src
    ```
 3. Launch SICStus:
+
    ```bash
    sicstus
    ```
 4. Load the game:
+
    ```prolog
    [game].
    play.
@@ -100,7 +110,8 @@ To enhance the visual appeal of the game, you can install the custom font (`font
 #### Windows
 1. Extract the ZIP file into a folder (e.g., `PFL_TP2_T01_Collapse_5`).
 2. Open SICStus and consult `game.pl` in the `src` folder.
-3. If the game does not start automatically, start the game with:
+3. Start the game with:
+
    ```prolog
    play.
    ```  
@@ -172,10 +183,22 @@ The game state tracks the board, current player, and rule (`game_state(Board, Cu
 - **Rule**: `1` or `2`.
 
 Examples:
-1. **Initial State**: `game_state(InitialBoard, player1, 1)
-`
-2. **Intermediate State** (after a few moves):`game_state(UpdatedBoard, player2, 1)`
-3. **Final State**: `game_over(game_state(Board, player2, 1), player1)`
+1. **Initial State**:
+
+   ```prolog
+   game_state(InitialBoard, player1, 1)
+   ```
+2. **Intermediate State** (after a few moves):
+
+   ```prolog
+   game_state(InitialBoard, player2, 1)
+   ```
+
+3. **Final State**: 
+   
+   ```prolog
+   game_over(game_state(Board, player2, 1), player1)
+   ```
 
 ---
 
@@ -238,3 +261,5 @@ Developing **Collapse** provided a valuable opportunity to refine our Prolog ski
 ### Tools and Assistance
 - **ChatGPT (OpenAI)**: Assisted in refining AI logic and suggesting future enhancements.
   - Queries: "Improve Prolog AI logic for strategic gameplay." and "Suggest future features for a Prolog board game."
+
+- [**Text to ASCII Art Generator**](https://patorjk.com/software/taag/#p=testall&f=Graffiti&t=Collapse)
