@@ -64,10 +64,29 @@ For more details, visit the [SICStus website](https://sicstus.sics.se).
 ---
 
 ### Font Installation
-- **Linux**: Copy `font.ttf` to `~/.fonts/` and refresh using `fc-cache -f -v`.
-- **Windows**: Right-click on `font.ttf` and select **Install**.
 
----
+To enhance the visual appeal of the game, you can install the custom font (`font.ttf`) system-wide or allow the game to use it directly from the project folder.
+
+#### Linux
+
+1. Copy the font file to your system's fonts directory:
+   ```bash
+   cp PFL_TP2_T01_Collapse_5/font.ttf ~/.fonts/
+   ```
+2. Refresh the font cache:
+   ```bash
+   fc-cache -f -v
+   ```
+
+3. Open SICStus and navigate to `Settings`, then `Font` and select the installed font (`Major Mono Display`).
+
+#### Windows
+1. Navigate to the project folder (e.g., `PFL_TP2_T01_Collapse_5`).
+
+2. Locate the `font.ttf` file, right-click on it, and select **Install**.
+
+3. Open SICStus and navigate to `Settings`, then `Font` and select the installed font (`Major Mono Display`).
+
 
 ### Game Installation
 
