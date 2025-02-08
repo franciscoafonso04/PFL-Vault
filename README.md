@@ -1,6 +1,6 @@
-# PFL-Hub
+# PFL-Vault
 
-Welcome to the **PFL-Hub**, a repository containing our projects for the **Functional and Logic Programming (Programação Funcional e em Lógica)** course. Here, you'll find implementations and experiments focusing on declarative approaches to programming, based on formal reasoning processes, which are more appropriate for resolving some types of problems.
+Welcome to the **PFL-Vault**, a repository containing our projects for the **Functional and Logic Programming (Programação Funcional e em Lógica)** course. Here, you'll find implementations and experiments focusing on declarative approaches to programming, based on formal reasoning processes, which are more appropriate for resolving some types of problems.
 
 ## Projects
 
